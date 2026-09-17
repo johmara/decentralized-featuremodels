@@ -1,0 +1,28 @@
+<svg [attr.viewBox]="viewBox()" class="tree" role="group" [attr.aria-label]="model().name + ' feature tree'">
+  <g class="edges">
+    @for (edge of edges(); track edge.key) {
+      <line class="edge" [attr.x1]="edge.x1" [attr.y1]="edge.y1" [attr.x2]="edge.x2" [attr.y2]="edge.y2"></line>
+    }
+  </g>
+
+  <g class="arcs">
+    @for (arc of groupArcs(); track arc.groupId) {
+      <path class="arc" [class.arc--filled]="arc.filled" [attr.d]="arc.d"></path>
+    }
+  </g>
+
+  <g class="nodes">
+    @for (id of nodeIds(); track id) {
+      @if (nodeOf(id); as node) {
+        <g
+          appFeatureNode
+          [feature]="featureOf(id)"
+          [node]="node"
+          [state]="stateOf(id)"
+          [disabled]="disabled()"
+          (activate)="onActivate(id)"
+        ></g>
+      }
+    }
+  </g>
+</svg>

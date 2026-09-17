@@ -1,0 +1,23 @@
+.tree {
+  width: 100%;
+  height: auto;
+  display: block;
+  font-family: var(--font-sans);
+  overflow: visible;
+}
+
+.edge {
+  stroke: var(--border);
+  stroke-width: 1.5;
+}
+
+.arc {
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.arc--filled {
+  fill: var(--text-muted);
+  fill-opacity: 0.3;
+}

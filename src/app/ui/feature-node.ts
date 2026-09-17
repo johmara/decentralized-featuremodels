@@ -1,0 +1,58 @@
+import { Component, computed, input, output } from '@angular/core';
+import type { Feature } from '../core/model/feature-model.types';
+import type { PositionedNode } from '../core/layout/tidy-tree';
+
+export type FeatureVisualState = 'manual' | 'derived' | 'unselected' | 'dead';
+
+/**
+ * One feature box. Attribute-selector component (`[appFeatureNode]` on a
+ * literal `<g>`) rather than a custom element tag — the host `<g>` is
+ * written directly in the parent's SVG template, so it is created in the
+ * SVG namespace by the parent's own markup; a custom tag name would not
+ * be.
+ */
+@Component({
+  selector: '[appFeatureNode]',
+  templateUrl: './feature-node.html',
+  styleUrl: './feature-node.scss',
+  host: {
+    class: 'node',
+    role: 'button',
+    tabindex: '0',
+    '[attr.transform]': 'transform()',
+    '[class.node--manual]': "state() === 'manual'",
+    '[class.node--derived]': "state() === 'derived'",
+    '[class.node--dead]': "state() === 'dead'",
+    '[class.node--disabled]': 'disabled()',
+    '[attr.aria-pressed]': "state() === 'manual' || state() === 'derived'",
+    '[attr.aria-disabled]': 'disabled() || null',
+    '[attr.aria-label]': 'feature().name',
+    '(click)': 'onActivate()',
+    '(keydown)': 'onKeydown($event)',
+  },
+})
+export class FeatureNode {
+  readonly feature = input.required<Feature>();
+  readonly node = input.required<PositionedNode>();
+  readonly state = input.required<FeatureVisualState>();
+  readonly disabled = input(false);
+
+  readonly activate = output<void>();
+
+  readonly transform = computed(() => `translate(${this.node().x - this.node().width / 2}, ${this.node().y})`);
+  readonly labelX = computed(() => this.node().width / 2);
+  readonly labelY = computed(() => this.node().height / 2 + 4);
+  readonly dotCx = computed(() => this.node().width / 2);
+
+  onActivate(): void {
+    if (this.disabled()) return;
+    this.activate.emit();
+  }
+
+  onKeydown(event: KeyboardEvent): void {
+    if (event.key === ' ' || event.key === 'Enter') {
+      event.preventDefault();
+      this.onActivate();
+    }
+  }
+}

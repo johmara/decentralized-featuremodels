@@ -1,0 +1,19 @@
+<svg:rect class="node__box" [attr.width]="node().width" [attr.height]="node().height" rx="8" ry="8"></svg:rect>
+<svg:text class="node__label" [attr.x]="labelX()" [attr.y]="labelY()" text-anchor="middle">{{ feature().name }}</svg:text>
+
+@if (feature().edge !== 'grouped') {
+  <svg:circle
+    class="node__dot"
+    [class.node__dot--filled]="feature().edge === 'mandatory'"
+    [attr.cx]="dotCx()"
+    cy="0"
+    r="4"
+  ></svg:circle>
+}
+
+@if (state() === 'manual') {
+  <svg:text class="node__badge" [attr.x]="node().width - 8" y="16" text-anchor="end" aria-hidden="true">&#10003;</svg:text>
+}
+@if (state() === 'dead') {
+  <svg:text class="node__badge node__badge--dead" [attr.x]="node().width - 8" y="16" text-anchor="end" aria-hidden="true">&#10007;</svg:text>
+}

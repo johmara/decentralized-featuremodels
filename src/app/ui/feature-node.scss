@@ -1,0 +1,63 @@
+:host {
+  cursor: pointer;
+}
+
+.node__box {
+  fill: var(--surface-raised);
+  stroke: var(--border);
+  stroke-width: 1.5;
+  transition: fill var(--transition-fast), stroke var(--transition-fast);
+}
+
+.node--manual .node__box {
+  stroke: var(--accent);
+  stroke-width: 2;
+  fill: color-mix(in srgb, var(--accent) 14%, var(--surface-raised));
+}
+
+.node--derived .node__box {
+  stroke: var(--accent);
+  stroke-dasharray: 4 2;
+}
+
+.node--dead .node__box {
+  opacity: 0.45;
+}
+
+.node--disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.node__label {
+  fill: var(--text);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.node__dot {
+  fill: var(--surface-raised);
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+
+.node__dot--filled {
+  fill: var(--text);
+}
+
+.node__badge {
+  fill: var(--success);
+  font-size: 13px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.node__badge--dead {
+  fill: var(--danger);
+}
+
+:host(:focus-visible) .node__box {
+  outline: none;
+  stroke: var(--focus-ring);
+  stroke-width: 3;
+}

@@ -1,0 +1,85 @@
+<main class="example-page">
+  <header class="example-page__header">
+    <h1>{{ store.example().title }}</h1>
+    <p>{{ store.example().blurb }}</p>
+  </header>
+
+  <div class="example-page__mode" role="tablist" aria-label="View mode">
+    <button type="button" role="tab" [attr.aria-selected]="store.mode() === 'centralized'" [class.active]="store.mode() === 'centralized'" (click)="setMode('centralized')">
+      Centralized
+    </button>
+    <button type="button" role="tab" [attr.aria-selected]="store.mode() === 'decentralized'" [class.active]="store.mode() === 'decentralized'" (click)="setMode('decentralized')">
+      Decentralized
+    </button>
+  </div>
+
+  @if (store.mode() === 'centralized') {
+    @if (store.example().centralized; as centralModel) {
+      <section class="example-page__centralized">
+        <p class="example-page__note">
+          Read-only — the monolith before it is split into independently owned scopes. Switch to
+          Decentralized to configure it.
+        </p>
+        @if (centralizedPropagation(); as prop) {
+          <app-feature-tree [model]="centralModel" [propagation]="prop" [disabled]="true"></app-feature-tree>
+        }
+      </section>
+    } @else {
+      <p class="example-page__note">This example has no natural monolithic counterpart.</p>
+    }
+  } @else {
+    <div class="example-page__scopes" role="tablist" aria-label="Scopes">
+      @for (model of store.example().models; track model.id) {
+        <button
+          type="button"
+          role="tab"
+          class="scope-tab"
+          [attr.aria-selected]="activeModelId() === model.id"
+          [class.active]="activeModelId() === model.id"
+          [style.border-bottom-color]="'var(' + model.scope.colorToken + ')'"
+          (click)="selectScope(model.id)"
+        >
+          {{ model.name }}
+          <span class="scope-tab__file">{{ model.scope.modelFileName }}</span>
+        </button>
+      }
+    </div>
+
+    <div class="example-page__presets">
+      @for (preset of store.example().presets; track preset.id) {
+        <button type="button" [title]="preset.description" (click)="loadPreset(preset.id)">{{ preset.title }}</button>
+      }
+      <button type="button" class="example-page__reset" (click)="reset()">Reset</button>
+    </div>
+
+    <div class="example-page__body">
+      <section class="example-page__tree">
+        <app-feature-tree [model]="activeModel()" [propagation]="activePropagation()" (toggle)="onToggle($event)"></app-feature-tree>
+      </section>
+
+      <aside class="example-page__panel">
+        <h2>{{ activeModel().name }} — local validity</h2>
+        <app-validity-badge [valid]="activeLocalValidity().valid"></app-validity-badge>
+        <app-explanation-list
+          [explanations]="activeLocalValidity().violations"
+          emptyText="This scope is locally valid."
+        ></app-explanation-list>
+
+        <h2>Global (resolver)</h2>
+        <app-validity-badge
+          [valid]="store.global().valid"
+          validLabel="Globally valid"
+          invalidLabel="Globally invalid"
+        ></app-validity-badge>
+        <app-explanation-list
+          [explanations]="globalExplanations()"
+          emptyText="Every required capability is provided, and no global rule is violated."
+        ></app-explanation-list>
+      </aside>
+    </div>
+  }
+
+  <footer class="example-page__legend">
+    <app-legend></app-legend>
+  </footer>
+</main>

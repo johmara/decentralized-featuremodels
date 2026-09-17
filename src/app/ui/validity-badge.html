@@ -1,0 +1,4 @@
+<span class="badge" [class.badge--valid]="valid()" [class.badge--invalid]="!valid()">
+  <span class="badge__icon" aria-hidden="true">{{ valid() ? '✓' : '✗' }}</span>
+  <span class="badge__text">{{ valid() ? validLabel() : invalidLabel() }}</span>
+</span>

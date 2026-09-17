@@ -1,1 +1,96 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global design tokens. Team colors carried over from the talk deck
+   (talk/var2026-slides.tex:21-28) for continuity between the paper's talk
+   and this site — kept as identity accents only, never the sole encoding
+   of any state ("never color-only", see the rendering plan). */
+
+:root {
+  --team-messaging: #003560;
+  --team-connectivity: #8dae10;
+  --team-keyboard: #f38653;
+  --team-storage: #5c6784;
+
+  --surface: #ffffff;
+  --surface-muted: #f3f4f6;
+  --surface-raised: #ffffff;
+  --border: #d6d7db;
+  --text: #1b1f27;
+  --text-muted: #5c6472;
+  --accent: #1c4f8f;
+  --danger: #b3261e;
+  --success: #1c7a4d;
+  --focus-ring: #1c4f8f;
+
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+
+  --transition-fast: 120ms ease;
+  --transition-medium: 220ms ease;
+}
+
+:root[data-theme='dark'] {
+  --surface: #12141a;
+  --surface-muted: #1b1f27;
+  --surface-raised: #1f2430;
+  --border: #333a47;
+  --text: #eef0f4;
+  --text-muted: #a3aab8;
+  --accent: #7fb1f5;
+  --danger: #ff8b82;
+  --success: #6fd6a3;
+  --focus-ring: #7fb1f5;
+}
+
+.reduced-motion,
+.reduced-motion * {
+  transition-duration: 0.001ms !important;
+  animation-duration: 0.001ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:not(.motion-override) * {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--surface);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--accent);
+}
+
+code,
+kbd {
+  font-family: var(--font-mono);
+}

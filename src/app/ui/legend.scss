@@ -1,0 +1,62 @@
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.legend__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dot {
+  fill: var(--surface-raised);
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+
+.dot--filled {
+  fill: var(--text);
+}
+
+.arc {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+
+.arc--filled {
+  fill: var(--text-muted);
+  fill-opacity: 0.4;
+}
+
+.swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.swatch--manual {
+  border: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-raised));
+  color: var(--accent);
+}
+
+.swatch--derived {
+  border: 2px dashed var(--accent);
+}
+
+.swatch--dead {
+  border: 1.5px solid var(--danger);
+  color: var(--danger);
+  opacity: 0.6;
+}

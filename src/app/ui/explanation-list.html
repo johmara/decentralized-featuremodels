@@ -1,0 +1,14 @@
+<div class="explanations" aria-live="polite">
+  @if (explanations().length === 0) {
+    <p class="explanations__empty">{{ emptyText() }}</p>
+  } @else {
+    <ul class="explanations__list">
+      @for (item of explanations(); track item.code + item.detail) {
+        <li class="explanations__item">
+          <strong class="explanations__title">{{ item.title }}</strong>
+          <span class="explanations__detail">{{ item.detail }}</span>
+        </li>
+      }
+    </ul>
+  }
+</div>
