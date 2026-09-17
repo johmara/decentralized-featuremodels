@@ -52,6 +52,11 @@ export class ExamplePage {
       this.store.setScope(scope);
     }
 
+    const presetId = params.get('preset');
+    if (presetId) {
+      this.store.loadPreset(presetId);
+    }
+
     const cfg = params.get('cfg');
     if (cfg) {
       const decoded = decodeSelection(example, cfg);

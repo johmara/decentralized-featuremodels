@@ -19,4 +19,38 @@
       }
     </div>
   </section>
+
+  <section class="compare-page__requirements">
+    <h2>Requirements for decentralized modeling</h2>
+    <p>What a decentralized feature modeling technique has to guarantee, each linked to where the demo shows it.</p>
+    <ul class="item-list">
+      @for (item of requirements; track item.id) {
+        <li class="item-list__entry">
+          <span class="item-list__tag">{{ item.id }}</span>
+          <div>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.detail }}</p>
+            <a [href]="item.demoLink">{{ item.demoLabel }} &rarr;</a>
+          </div>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section class="compare-page__challenges">
+    <h2>Open research challenges</h2>
+    <p>What none of this settles yet — each linked to the place in the demo where it actually bites.</p>
+    <ul class="item-list">
+      @for (item of challenges; track item.id) {
+        <li class="item-list__entry">
+          <span class="item-list__tag item-list__tag--challenge">{{ item.id }}</span>
+          <div>
+            <h3>{{ item.title }} <span class="item-list__relates">from {{ item.relatesTo }}</span></h3>
+            <p>{{ item.detail }}</p>
+            <a [href]="item.demoLink">{{ item.demoLabel }} &rarr;</a>
+          </div>
+        </li>
+      }
+    </ul>
+  </section>
 </main>
