@@ -108,6 +108,11 @@ export class ConfigStore {
     this._manual.set(EMPTY_SELECTION);
   }
 
+  /** Replaces the manual selection wholesale — used when applying a decoded share link. */
+  loadSelection(selection: Selection): void {
+    this._manual.set(sanitizeSelection(this.example(), selection));
+  }
+
   loadPreset(presetId: string): void {
     const example = this.example();
     const preset = example.presets.find((p) => p.id === presetId);

@@ -1,8 +1,10 @@
-import { Component, computed, effect, inject, input } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { FeatureTree } from '../../ui/feature-tree';
 import { Legend } from '../../ui/legend';
 import { DecentralizedView } from './decentralized-view';
 import { ConfigStore, type Mode } from '../../core/state/config.store';
+import { decodeSelection, encodeSelection } from '../../core/url/config-codec';
 import { explainMissingCapability, explainRuleViolation } from '../../core/engine/resolver';
 import type { Explanation } from '../../core/engine/explain';
 import type { ModelPropagation } from '../../core/engine/propagate';
@@ -18,9 +20,38 @@ export class ExamplePage {
   readonly exampleId = input<string>('phone');
 
   protected readonly store = inject(ConfigStore);
+  private readonly route = inject(ActivatedRoute);
 
-  private readonly syncExample = effect(() => {
-    this.store.setExample(this.exampleId());
+  protected readonly shareStatus = signal<'idle' | 'copied' | 'manual'>('idle');
+  protected readonly shareLink = signal<string | null>(null);
+
+  /**
+   * Runs whenever the route's exampleId changes: (re)selects the example,
+   * then applies any share-link query params for it. Deliberately a single
+   * effect — setExample's reset and the URL overlay must happen in the
+   * same synchronous pass, or the overlay would be wiped by the reset.
+   */
+  private readonly syncFromRoute = effect(() => {
+    const id = this.exampleId();
+    this.store.setExample(id);
+
+    const params = this.route.snapshot.queryParamMap;
+    const mode = params.get('mode');
+    if (mode === 'centralized' || mode === 'decentralized') {
+      this.store.setMode(mode);
+    }
+
+    const scope = params.get('scope');
+    const example = this.store.example();
+    if (scope && example.models.some((model) => model.id === scope)) {
+      this.store.setScope(scope);
+    }
+
+    const cfg = params.get('cfg');
+    if (cfg) {
+      const decoded = decodeSelection(example, cfg);
+      if (decoded) this.store.loadSelection(decoded);
+    }
   });
 
   /** Structure-only view of the centralized reference model — no synthetic configuration is implied. */
@@ -66,5 +97,37 @@ export class ExamplePage {
 
   reset(): void {
     this.store.reset();
+  }
+
+  async copyLink(): Promise<void> {
+    const example = this.store.example();
+    const cfg = encodeSelection(example, this.store.manual());
+    const url = new URL(window.location.href);
+    url.searchParams.set('cfg', cfg);
+    url.searchParams.set('mode', this.store.mode());
+    const scope = this.store.activeScope();
+    if (scope) url.searchParams.set('scope', scope);
+    else url.searchParams.delete('scope');
+
+    const text = url.toString();
+
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        this.shareStatus.set('copied');
+        this.shareLink.set(null);
+        setTimeout(() => this.shareStatus.set('idle'), 2000);
+        return;
+      } catch {
+        // fall through to manual fallback
+      }
+    }
+
+    this.shareStatus.set('manual');
+    this.shareLink.set(text);
+  }
+
+  selectAll(event: Event): void {
+    (event.target as HTMLInputElement).select();
   }
 }

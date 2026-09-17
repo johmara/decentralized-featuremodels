@@ -32,8 +32,18 @@
       @for (preset of store.example().presets; track preset.id) {
         <button type="button" [title]="preset.description" (click)="loadPreset(preset.id)">{{ preset.title }}</button>
       }
+      <button type="button" (click)="copyLink()">
+        {{ shareStatus() === 'copied' ? 'Link copied!' : 'Copy link to this state' }}
+      </button>
       <button type="button" class="example-page__reset" (click)="reset()">Reset</button>
     </div>
+
+    @if (shareLink(); as link) {
+      <p class="example-page__share-fallback">
+        Could not use the clipboard automatically — copy this link:
+        <input type="text" [value]="link" readonly (click)="selectAll($event)" />
+      </p>
+    }
 
     <app-decentralized-view
       [example]="store.example()"
