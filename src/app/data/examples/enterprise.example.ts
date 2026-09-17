@@ -18,8 +18,14 @@
  * - Multiple micro API repos can provide the SAME capability — different
  *   versions, each its own deployable, each its own scope.
  * - The platform is divided into product lines (Shipment, Finance), each
- *   with its own stack, sharing some scopes (Tracking Numbers) across
- *   products via the capability layer, not via a shared repo.
+ *   with its own stack, sharing some scopes (Tracking Number Issuance)
+ *   across products via the capability layer, not via a shared repo.
+ * - Capabilities are named after business abilities, never after the API
+ *   that happens to expose them — "Invoice Audit", not "Invoice API".
+ *   A capability can also be something a repo only partly contributes
+ *   to: Freight Calculation is provided by both the Execution Module API
+ *   (the rating side) and the Finance Module API (the billing side) —
+ *   neither one alone "is" Freight Calculation, each is part of it.
  */
 import type {
   AssetNode,
@@ -33,24 +39,25 @@ import type {
 import { feature } from './feature-helpers';
 
 const CAPABILITIES: readonly Capability[] = [
-  { id: 'ShipmentApi', name: 'Shipment API', description: 'The contract for creating and updating shipments.' },
-  { id: 'TrackingApi', name: 'Tracking API', description: 'The contract for shipment tracking state.' },
-  { id: 'InvoiceApi', name: 'Invoice API', description: 'The contract for invoice and billing data.' },
+  { id: 'ShipmentCreation', name: 'Shipment Creation', description: 'The business ability to create and update a shipment.' },
+  { id: 'ShipmentTracking', name: 'Shipment Tracking', description: 'The business ability to report a shipment’s tracking state.' },
   {
-    id: 'ExecutionOrchestration',
-    name: 'Execution Orchestration',
-    description: 'The workflow engine that sequences calls to shipment-side micro APIs.',
+    id: 'ShipmentExecution',
+    name: 'Shipment Execution',
+    description: 'The business ability to actually carry a shipment through to completion — routing, validating, and numbering it.',
   },
+  { id: 'CarrierRouting', name: 'Carrier Routing', description: 'Choosing a carrier and service for a shipment.' },
+  { id: 'ShipmentValidation', name: 'Shipment Validation', description: 'Checking a shipment against domain rules before it moves.' },
+  { id: 'TrackingNumberIssuance', name: 'Tracking Number Issuance', description: 'Issuing tracking number identifiers.' },
+  { id: 'InvoiceAudit', name: 'Invoice Audit', description: 'Verifying an invoice’s line items against the shipment they bill for.' },
+  { id: 'BillingProposal', name: 'Billing Proposal', description: 'Proposing a billing amount before an invoice is issued.' },
   {
-    id: 'TrackingOrchestration',
-    name: 'Tracking Orchestration',
-    description: 'Coordinates tracking-number generation with shipment execution.',
+    id: 'FreightCalculation',
+    name: 'Freight Calculation',
+    description:
+      'Determining what a shipment costs to move. No single repo owns this outright — the rating side and the billing side each provide part of it.',
+    vocabularyNote: 'Provided jointly by the Execution Module API and the Finance Module API — see the note on either.',
   },
-  { id: 'FinanceOrchestration', name: 'Finance Orchestration', description: 'The workflow engine for invoicing and billing.' },
-  { id: 'BillingReconciliation', name: 'Billing Reconciliation', description: 'Matches invoices against payment records.' },
-  { id: 'Routing', name: 'Routing', description: 'Route and service selection for a shipment.' },
-  { id: 'Validation', name: 'Validation', description: 'Domain-specific validation rules for a shipment.' },
-  { id: 'TrackingNumbers', name: 'Tracking Numbers', description: 'Generation of tracking number identifiers.' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -65,7 +72,7 @@ function frontendShipmentEntryModel(): FeatureModel {
       parentId: null,
       edge: 'mandatory',
       childIds: ['DarkTheme'],
-      requires: ['ShipmentApi'],
+      requires: ['ShipmentCreation'],
     }),
     DarkTheme: feature({ id: 'DarkTheme', name: 'Dark Theme', parentId: 'ShipmentEntryFacade', edge: 'optional' }),
   };
@@ -94,7 +101,7 @@ function frontendTrackingModel(): FeatureModel {
       name: 'Tracking Facade',
       parentId: null,
       edge: 'mandatory',
-      requires: ['TrackingApi'],
+      requires: ['ShipmentTracking'],
     }),
   };
   return {
@@ -123,8 +130,8 @@ function apiFacadeDefaultModel(): FeatureModel {
       parentId: null,
       edge: 'mandatory',
       childIds: ['Authentication', 'PayloadValidation'],
-      provides: ['ShipmentApi', 'TrackingApi'],
-      requires: ['ExecutionOrchestration'],
+      provides: ['ShipmentCreation', 'ShipmentTracking'],
+      requires: ['ShipmentExecution'],
       note: 'One repo, two capabilities — a facade is not the same thing as a single capability.',
     }),
     Authentication: feature({
@@ -167,9 +174,9 @@ function apiFacadePartnerAModel(): FeatureModel {
       parentId: null,
       edge: 'mandatory',
       childIds: ['FieldTranslation'],
-      provides: ['ShipmentApi'],
-      requires: ['ExecutionOrchestration'],
-      note: 'A customer-specific facade, its own repo, exposing a narrower slice — Shipment only, no Tracking.',
+      provides: ['ShipmentCreation'],
+      requires: ['ShipmentExecution'],
+      note: 'A customer-specific facade, its own repo, exposing a narrower slice — Shipment Creation only, no Tracking.',
     }),
     FieldTranslation: feature({ id: 'FieldTranslation', name: 'Field Translation', parentId: 'PartnerAApiFacade', edge: 'optional' }),
   };
@@ -199,9 +206,9 @@ function moduleApiExecutionModel(): FeatureModel {
       parentId: null,
       edge: 'mandatory',
       childIds: ['Compensation'],
-      provides: ['ExecutionOrchestration', 'TrackingOrchestration'],
-      requires: ['Routing', 'Validation', 'TrackingNumbers'],
-      note: 'A module API is its own repo providing several related capabilities, not one.',
+      provides: ['ShipmentExecution', 'FreightCalculation'],
+      requires: ['CarrierRouting', 'ShipmentValidation', 'TrackingNumberIssuance'],
+      note: 'A module API is its own repo providing several related capabilities, not one — and Freight Calculation here is only the rating side of it. The Finance Module API provides the other side.',
     }),
     Compensation: feature({ id: 'Compensation', name: 'Compensation', parentId: 'ExecutionModuleApi', edge: 'optional' }),
   };
@@ -226,7 +233,7 @@ function moduleApiExecutionModel(): FeatureModel {
 function microApiRoutingModel(version: 'v2' | 'v3'): FeatureModel {
   const id = version === 'v2' ? 'RoutingV2Api' : 'RoutingV3Api';
   const features: Record<string, Feature> = {
-    [id]: feature({ id, name: `Routing API (${version})`, parentId: null, edge: 'mandatory', provides: ['Routing'] }),
+    [id]: feature({ id, name: `Routing API (${version})`, parentId: null, edge: 'mandatory', provides: ['CarrierRouting'] }),
   };
   return {
     id: `enterprise.micro-api.routing-${version}`,
@@ -260,7 +267,7 @@ function microApiValidationModel(): FeatureModel {
       name: 'Enabled',
       parentId: 'ValidationV1Api',
       edge: 'optional',
-      provides: ['Validation'],
+      provides: ['ShipmentValidation'],
       note: 'A micro API should provide exactly one capability — gated behind an explicit toggle rather than the always-on root, so this scope can demonstrate a real missing-capability state.',
     }),
   };
@@ -289,7 +296,7 @@ function microApiTrackingNumbersModel(): FeatureModel {
       name: 'Tracking Numbers API',
       parentId: null,
       edge: 'mandatory',
-      provides: ['TrackingNumbers'],
+      provides: ['TrackingNumberIssuance'],
     }),
   };
   return {
@@ -321,7 +328,8 @@ function frontendInvoiceAuditModel(): FeatureModel {
       name: 'Invoice Audit Facade',
       parentId: null,
       edge: 'mandatory',
-      requires: ['InvoiceApi'],
+      requires: ['InvoiceAudit'],
+      note: 'Satisfied directly by the Finance Module API, not by the Finance API Facade in between — capabilities do not care how many layers separate a requirer from its provider.',
     }),
   };
   return {
@@ -350,8 +358,8 @@ function apiFacadeFinanceModel(): FeatureModel {
       parentId: null,
       edge: 'mandatory',
       childIds: ['AuditLogging'],
-      provides: ['InvoiceApi'],
-      requires: ['FinanceOrchestration'],
+      requires: ['InvoiceAudit', 'BillingProposal'],
+      note: 'A pure consumer here — it needs Invoice Audit and Billing Proposal to build its responses, but does not re-provide them upward. The frontend facade above is satisfied directly by the Finance Module API instead.',
     }),
     AuditLogging: feature({ id: 'AuditLogging', name: 'Audit Logging', parentId: 'FinanceApiFacade', edge: 'optional' }),
   };
@@ -381,9 +389,9 @@ function moduleApiFinanceModel(): FeatureModel {
       parentId: null,
       edge: 'mandatory',
       childIds: ['Compensation'],
-      provides: ['FinanceOrchestration', 'BillingReconciliation'],
-      requires: ['TrackingNumbers'],
-      note: 'Requires TrackingNumbers from the Shipment product’s micro API — capabilities cross product lines the same way they cross layers.',
+      provides: ['InvoiceAudit', 'BillingProposal', 'FreightCalculation'],
+      requires: ['TrackingNumberIssuance'],
+      note: 'Supports Invoice Audit and Billing Proposal directly, and is one of two providers of Freight Calculation — the billing side of it, alongside the Execution Module API’s rating side. Also requires Tracking Number Issuance from the Shipment product’s micro API: capabilities cross product lines the same way they cross layers.',
     }),
     Compensation: feature({ id: 'Compensation', name: 'Compensation', parentId: 'FinanceModuleApi', edge: 'optional' }),
   };

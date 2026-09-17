@@ -39,24 +39,41 @@ describe('every shipped example', () => {
 });
 
 describe('enterprise example presets', () => {
-  it('"everything-wired" is globally valid, with Routing provided by two separate repos', () => {
+  it('"everything-wired" is globally valid, with Carrier Routing provided by two separate repos', () => {
     const manual = selectionFromPreset('enterprise', 'everything-wired');
     const { selection } = propagateAll(EXAMPLES['enterprise'], manual);
     const result = resolveGlobal(EXAMPLES['enterprise'], selection);
     expect(result.valid).toBe(true);
-    expect(result.ledger.provided.get('Routing')?.length).toBe(2);
-    const providerModels = new Set(result.ledger.provided.get('Routing')?.map((ref) => ref.modelId));
+    expect(result.ledger.provided.get('CarrierRouting')?.length).toBe(2);
+    const providerModels = new Set(result.ledger.provided.get('CarrierRouting')?.map((ref) => ref.modelId));
     expect(providerModels).toEqual(new Set(['enterprise.micro-api.routing-v2', 'enterprise.micro-api.routing-v3']));
   });
 
-  it('"validation-disabled" reports Validation missing and notifies only the Validation v1 repo', () => {
+  it('Freight Calculation is provided jointly by the Execution and Finance Module APIs', () => {
+    const manual = selectionFromPreset('enterprise', 'everything-wired');
+    const { selection } = propagateAll(EXAMPLES['enterprise'], manual);
+    const result = resolveGlobal(EXAMPLES['enterprise'], selection);
+    const providerModels = new Set(result.ledger.provided.get('FreightCalculation')?.map((ref) => ref.modelId));
+    expect(providerModels).toEqual(new Set(['enterprise.module-api.execution', 'enterprise.module-api.finance']));
+  });
+
+  it('"validation-disabled" reports Shipment Validation missing and notifies only the Validation v1 repo', () => {
     const manual = selectionFromPreset('enterprise', 'validation-disabled');
     const { selection } = propagateAll(EXAMPLES['enterprise'], manual);
     const result = resolveGlobal(EXAMPLES['enterprise'], selection);
     expect(result.valid).toBe(false);
-    const missing = result.missing.find((m) => m.capability === 'Validation');
+    const missing = result.missing.find((m) => m.capability === 'ShipmentValidation');
     expect(missing?.diagnosis).toBe('unprovisioned');
     expect(missing?.notifyModels).toEqual(['enterprise.micro-api.validation-v1']);
+  });
+
+  it('no capability id is named after the API/layer that exposes it', () => {
+    const bannedSuffixes = ['Api', 'Orchestration'];
+    for (const capability of EXAMPLES['enterprise'].capabilities) {
+      for (const suffix of bannedSuffixes) {
+        expect(capability.id.endsWith(suffix)).toBe(false);
+      }
+    }
   });
 
   it('module APIs and facades each provide more than one capability; micro APIs provide exactly one', () => {
