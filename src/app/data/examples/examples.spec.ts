@@ -81,6 +81,19 @@ describe('enterprise example presets', () => {
     expect(providers?.[0].modelId).toBe('enterprise.module-api.execution');
   });
 
+  it('"dangerous-goods-missing" is globally invalid, and notifies only the Execution Module API', () => {
+    const manual = selectionFromPreset('enterprise', 'dangerous-goods-missing');
+    const { selection } = propagateAll(EXAMPLES['enterprise'], manual);
+    const result = resolveGlobal(EXAMPLES['enterprise'], selection);
+    expect(result.valid).toBe(false);
+
+    const missing = result.missing.find((m) => m.capability === 'DangerousGoods');
+    expect(missing?.diagnosis).toBe('unprovisioned');
+    expect(missing?.notifyModels).toEqual(['enterprise.module-api.execution']);
+    expect(missing?.notifyModels).not.toContain('enterprise.frontend.tracking-portal');
+    expect(missing?.notifyModels).not.toContain('enterprise.frontend.shipment-portal');
+  });
+
   it('no capability id is named after the API/layer that exposes it', () => {
     const bannedSuffixes = ['Api', 'Orchestration'];
     for (const capability of EXAMPLES['enterprise'].capabilities) {

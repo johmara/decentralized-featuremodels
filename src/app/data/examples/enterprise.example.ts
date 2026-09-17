@@ -226,12 +226,20 @@ function moduleApiExecutionModel(): FeatureModel {
       name: 'Execution Module API',
       parentId: null,
       edge: 'mandatory',
-      childIds: ['Compensation'],
-      provides: ['ShipmentExecution', 'FreightCalculation', 'DangerousGoods'],
+      childIds: ['Compensation', 'DangerousGoods'],
+      provides: ['ShipmentExecution', 'FreightCalculation'],
       requires: ['CarrierRouting', 'ShipmentValidation', 'TrackingNumberIssuance'],
-      note: 'A module API is its own repo providing several related capabilities, not one — Freight Calculation here is only the rating side of it (the Finance Module API provides the other side), and DangerousGoods is required by two entirely separate frontend repos whenever either one turns its own Dangerous Goods feature on.',
+      note: 'A module API is its own repo providing several related capabilities, not one — Freight Calculation here is only the rating side of it (the Finance Module API provides the other side).',
     }),
     Compensation: feature({ id: 'Compensation', name: 'Compensation', parentId: 'ExecutionModuleApi', edge: 'optional' }),
+    DangerousGoods: feature({
+      id: 'DangerousGoods',
+      name: 'Dangerous Goods',
+      parentId: 'ExecutionModuleApi',
+      edge: 'optional',
+      provides: ['DangerousGoods'],
+      note: 'Provided only when this scope turns it on — required by two entirely separate frontend repos whenever either one turns its own Dangerous Goods feature on, but selecting either of those alone does not enable this one.',
+    }),
   };
   return {
     id: 'enterprise.module-api.execution',
@@ -482,9 +490,28 @@ const PRESETS: readonly ConfigPreset[] = [
     id: 'dangerous-goods',
     title: 'Dangerous Goods, from two portals at once',
     description:
-      'Shipment Portal and Tracking Portal each have their own local Dangerous Goods toggle. Switch either one on and it requires the same shared DangerousGoods capability — both are satisfied by the one Execution Module API, independently of each other.',
+      'Shipment Portal and Tracking Portal each have their own local Dangerous Goods toggle. Both are switched on, and the Execution Module API has turned on its own Dangerous Goods feature too — both requirers are satisfied by the one provider, independently of each other.',
     selection: {
       'enterprise.frontend.shipment-portal': ['DangerousGoods'],
+      'enterprise.frontend.tracking-portal': ['DangerousGoods'],
+      'enterprise.frontend.invoice-portal': [],
+      'enterprise.api-facade.default': ['BearerToken'],
+      'enterprise.api-facade.partner-a': [],
+      'enterprise.module-api.execution': ['DangerousGoods'],
+      'enterprise.module-api.finance': [],
+      'enterprise.micro-api.routing-v2': [],
+      'enterprise.micro-api.routing-v3': [],
+      'enterprise.micro-api.validation-v1': ['Enabled'],
+      'enterprise.micro-api.tracking-numbers': [],
+    },
+  },
+  {
+    id: 'dangerous-goods-missing',
+    title: 'Dangerous Goods, not enabled downstream',
+    description:
+      'Tracking Portal turns its Dangerous Goods toggle on, but the Execution Module API never enabled its own — the capability it requires does not exist yet. The resolver notifies only the Execution Module API, not Tracking Portal, and not Shipment Portal, which never asked for it.',
+    selection: {
+      'enterprise.frontend.shipment-portal': [],
       'enterprise.frontend.tracking-portal': ['DangerousGoods'],
       'enterprise.frontend.invoice-portal': [],
       'enterprise.api-facade.default': ['BearerToken'],
