@@ -33,8 +33,8 @@ export const REQUIREMENTS: readonly RequirementItem[] = [
     id: 'R4',
     title: 'Decentralized configuration',
     detail: 'A valid global configuration must be reachable by combining independently-made local decisions, not by editing one shared file.',
-    demoLink: '/explore/enterprise?mode=decentralized&preset=shipment-only',
-    demoLabel: 'Six scopes, each configured alone, resolve together',
+    demoLink: '/explore/enterprise?mode=decentralized&preset=everything-wired',
+    demoLabel: 'Twelve repos, two product lines, each configured alone, resolve together',
   },
   {
     id: 'R5',
@@ -48,6 +48,6 @@ export const REQUIREMENTS: readonly RequirementItem[] = [
     title: 'Reuse and cloning',
     detail: 'A model must be relocatable or duplicatable into a new scope without dragging in the models it used to sit beside.',
     demoLink: '/explore/enterprise?mode=decentralized',
-    demoLabel: 'Three near-identical micro API scopes, each self-contained',
+    demoLabel: 'Two Routing repos, same capability, different versions — clone or relocate either without touching the other',
   },
 ];

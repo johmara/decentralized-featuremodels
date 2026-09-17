@@ -2,11 +2,24 @@
  * Example 2 — a layered enterprise platform.
  *
  * This is a SYNTHETIC, generalized example. It reproduces the *shape* of a
- * layered API architecture (frontend facade -> API facade -> module API ->
- * micro APIs, strictly downward dependencies, no layer-skipping,
- * per-consumer capability-API version pinning) without naming any real
- * company, customer, tenant, service, or internal repo. Do not treat any
- * identifier here as a real system name.
+ * layered API architecture without naming any real company, customer,
+ * tenant, service, or internal repo. Do not treat any identifier here as
+ * a real system name.
+ *
+ * Modeling rules this data follows, deliberately:
+ * - Every facade, module API, and micro API is its OWN repo with its OWN
+ *   feature model — nothing is lumped together. "API Facade" is not one
+ *   model with internal variants; Default, Partner A, and Finance are
+ *   three separate repos.
+ * - A capability is not the same thing as an API. A repo's identity (its
+ *   scope) is independent of which capability or capabilities it exposes.
+ * - Facades (frontend or API) and module APIs typically provide MULTIPLE
+ *   capabilities each. A micro API should provide exactly ONE.
+ * - Multiple micro API repos can provide the SAME capability — different
+ *   versions, each its own deployable, each its own scope.
+ * - The platform is divided into product lines (Shipment, Finance), each
+ *   with its own stack, sharing some scopes (Tracking Numbers) across
+ *   products via the capability layer, not via a shared repo.
  */
 import type {
   AssetNode,
@@ -26,272 +39,367 @@ const CAPABILITIES: readonly Capability[] = [
   {
     id: 'ExecutionOrchestration',
     name: 'Execution Orchestration',
-    description: 'The internal workflow engine that sequences calls to the micro APIs below it.',
+    description: 'The workflow engine that sequences calls to shipment-side micro APIs.',
   },
+  {
+    id: 'TrackingOrchestration',
+    name: 'Tracking Orchestration',
+    description: 'Coordinates tracking-number generation with shipment execution.',
+  },
+  { id: 'FinanceOrchestration', name: 'Finance Orchestration', description: 'The workflow engine for invoicing and billing.' },
+  { id: 'BillingReconciliation', name: 'Billing Reconciliation', description: 'Matches invoices against payment records.' },
   { id: 'Routing', name: 'Routing', description: 'Route and service selection for a shipment.' },
   { id: 'Validation', name: 'Validation', description: 'Domain-specific validation rules for a shipment.' },
   { id: 'TrackingNumbers', name: 'Tracking Numbers', description: 'Generation of tracking number identifiers.' },
 ];
 
-function frontendFacadeModel(): FeatureModel {
+// ---------------------------------------------------------------------------
+// Product: Shipment
+// ---------------------------------------------------------------------------
+
+function frontendShipmentEntryModel(): FeatureModel {
   const features: Record<string, Feature> = {
-    FrontendFacade: feature({
-      id: 'FrontendFacade',
-      name: 'Frontend Facade',
+    ShipmentEntryFacade: feature({
+      id: 'ShipmentEntryFacade',
+      name: 'Shipment Entry Facade',
       parentId: null,
       edge: 'mandatory',
-      childIds: ['ShipmentEntryUI', 'TrackingUI', 'InvoiceAuditUI', 'DarkTheme'],
-    }),
-    ShipmentEntryUI: feature({
-      id: 'ShipmentEntryUI',
-      name: 'Shipment Entry UI',
-      parentId: 'FrontendFacade',
-      edge: 'grouped',
-      groupId: 'ui-type',
+      childIds: ['DarkTheme'],
       requires: ['ShipmentApi'],
     }),
-    TrackingUI: feature({
-      id: 'TrackingUI',
-      name: 'Tracking UI',
-      parentId: 'FrontendFacade',
-      edge: 'grouped',
-      groupId: 'ui-type',
-      requires: ['TrackingApi'],
-    }),
-    InvoiceAuditUI: feature({
-      id: 'InvoiceAuditUI',
-      name: 'Invoice Audit UI',
-      parentId: 'FrontendFacade',
-      edge: 'grouped',
-      groupId: 'ui-type',
-      requires: ['InvoiceApi'],
-      note: 'InvoiceApi is provided by Module API, two layers down. Capabilities do not care how many layers separate a requirer from its provider — that is the point of using them instead of direct references.',
-    }),
-    DarkTheme: feature({ id: 'DarkTheme', name: 'Dark Theme', parentId: 'FrontendFacade', edge: 'optional' }),
+    DarkTheme: feature({ id: 'DarkTheme', name: 'Dark Theme', parentId: 'ShipmentEntryFacade', edge: 'optional' }),
   };
-
-  const groups: Record<string, FeatureGroup> = {
-    'ui-type': { id: 'ui-type', parentId: 'FrontendFacade', kind: 'or', memberIds: ['ShipmentEntryUI', 'TrackingUI', 'InvoiceAuditUI'] },
-  };
-
   return {
-    id: 'enterprise.frontend-facade',
-    name: 'Frontend Facade',
-    rootId: 'FrontendFacade',
+    id: 'enterprise.frontend.shipment-entry',
+    name: 'Shipment Entry Frontend Facade',
+    rootId: 'ShipmentEntryFacade',
     features,
-    groups,
+    groups: {},
     constraints: [],
     scope: {
-      assetPath: 'platform/frontend-facade/',
-      assetKind: 'folder',
-      modelFileName: 'frontend-facade.fm',
-      ownerLabel: 'Frontend Facade scope',
+      assetPath: 'platform/shipment/frontend-shipment-entry/',
+      assetKind: 'repo',
+      modelFileName: 'frontend-shipment-entry.fm',
+      ownerLabel: 'Shipment Entry Frontend Facade scope',
       colorToken: '--team-messaging',
     },
     featureOrder: Object.keys(features),
   };
 }
 
-function apiFacadeModel(): FeatureModel {
+function frontendTrackingModel(): FeatureModel {
   const features: Record<string, Feature> = {
-    ApiFacade: feature({
-      id: 'ApiFacade',
-      name: 'API Facade',
+    TrackingFacade: feature({
+      id: 'TrackingFacade',
+      name: 'Tracking Facade',
       parentId: null,
       edge: 'mandatory',
-      childIds: ['Authentication', 'PayloadValidation', 'FieldTranslation', 'DefaultContract', 'PartnerContractA', 'PartnerContractB'],
-      provides: ['ShipmentApi', 'TrackingApi'],
-      requires: ['ExecutionOrchestration'],
+      requires: ['TrackingApi'],
     }),
-    Authentication: feature({
-      id: 'Authentication',
-      name: 'Authentication',
-      parentId: 'ApiFacade',
-      edge: 'mandatory',
-      childIds: ['BearerToken', 'ApiKey'],
-    }),
-    BearerToken: feature({ id: 'BearerToken', name: 'Bearer Token', parentId: 'Authentication', edge: 'grouped', groupId: 'auth-type' }),
-    ApiKey: feature({ id: 'ApiKey', name: 'API Key', parentId: 'Authentication', edge: 'grouped', groupId: 'auth-type' }),
-    PayloadValidation: feature({ id: 'PayloadValidation', name: 'Payload Validation', parentId: 'ApiFacade', edge: 'mandatory' }),
-    FieldTranslation: feature({ id: 'FieldTranslation', name: 'Field Translation', parentId: 'ApiFacade', edge: 'optional' }),
-    DefaultContract: feature({ id: 'DefaultContract', name: 'Default Contract', parentId: 'ApiFacade', edge: 'grouped', groupId: 'contract-type' }),
-    PartnerContractA: feature({ id: 'PartnerContractA', name: 'Partner Contract A', parentId: 'ApiFacade', edge: 'grouped', groupId: 'contract-type' }),
-    PartnerContractB: feature({ id: 'PartnerContractB', name: 'Partner Contract B', parentId: 'ApiFacade', edge: 'grouped', groupId: 'contract-type' }),
   };
-
-  const groups: Record<string, FeatureGroup> = {
-    'auth-type': { id: 'auth-type', parentId: 'Authentication', kind: 'xor', memberIds: ['BearerToken', 'ApiKey'] },
-    'contract-type': {
-      id: 'contract-type',
-      parentId: 'ApiFacade',
-      kind: 'or',
-      memberIds: ['DefaultContract', 'PartnerContractA', 'PartnerContractB'],
-    },
-  };
-
   return {
-    id: 'enterprise.api-facade',
-    name: 'API Facade',
-    rootId: 'ApiFacade',
+    id: 'enterprise.frontend.tracking',
+    name: 'Tracking Frontend Facade',
+    rootId: 'TrackingFacade',
     features,
-    groups,
+    groups: {},
     constraints: [],
     scope: {
-      assetPath: 'platform/api-facade/',
-      assetKind: 'folder',
-      modelFileName: 'api-facade.fm',
-      ownerLabel: 'API Facade scope',
+      assetPath: 'platform/shipment/frontend-tracking/',
+      assetKind: 'repo',
+      modelFileName: 'frontend-tracking.fm',
+      ownerLabel: 'Tracking Frontend Facade scope',
       colorToken: '--team-connectivity',
     },
     featureOrder: Object.keys(features),
   };
 }
 
-function moduleApiModel(): FeatureModel {
+function apiFacadeDefaultModel(): FeatureModel {
   const features: Record<string, Feature> = {
-    ModuleApi: feature({
-      id: 'ModuleApi',
-      name: 'Module API',
+    DefaultApiFacade: feature({
+      id: 'DefaultApiFacade',
+      name: 'Default API Facade',
       parentId: null,
       edge: 'mandatory',
-      childIds: ['ExecutionPipeline', 'Compensation', 'FinanceOrchestration'],
-      provides: ['ExecutionOrchestration'],
-      requires: ['Routing', 'Validation', 'TrackingNumbers'],
+      childIds: ['Authentication', 'PayloadValidation'],
+      provides: ['ShipmentApi', 'TrackingApi'],
+      requires: ['ExecutionOrchestration'],
+      note: 'One repo, two capabilities — a facade is not the same thing as a single capability.',
     }),
-    ExecutionPipeline: feature({ id: 'ExecutionPipeline', name: 'Execution Pipeline', parentId: 'ModuleApi', edge: 'mandatory' }),
-    Compensation: feature({
-      id: 'Compensation',
-      name: 'Compensation',
-      parentId: 'ModuleApi',
-      edge: 'optional',
-      note: 'Rollback logic when a step in the execution pipeline fails partway through.',
+    Authentication: feature({
+      id: 'Authentication',
+      name: 'Authentication',
+      parentId: 'DefaultApiFacade',
+      edge: 'mandatory',
+      childIds: ['BearerToken', 'ApiKey'],
     }),
-    FinanceOrchestration: feature({
-      id: 'FinanceOrchestration',
-      name: 'Finance Orchestration',
-      parentId: 'ModuleApi',
-      edge: 'optional',
-      provides: ['InvoiceApi'],
-      note: 'InvoiceApi is only provided when this optional feature is selected — deselect it to see the resolver flag Invoice Audit UI upstream.',
-    }),
+    BearerToken: feature({ id: 'BearerToken', name: 'Bearer Token', parentId: 'Authentication', edge: 'grouped', groupId: 'auth-type' }),
+    ApiKey: feature({ id: 'ApiKey', name: 'API Key', parentId: 'Authentication', edge: 'grouped', groupId: 'auth-type' }),
+    PayloadValidation: feature({ id: 'PayloadValidation', name: 'Payload Validation', parentId: 'DefaultApiFacade', edge: 'mandatory' }),
   };
-
+  const groups: Record<string, FeatureGroup> = {
+    'auth-type': { id: 'auth-type', parentId: 'Authentication', kind: 'xor', memberIds: ['BearerToken', 'ApiKey'] },
+  };
   return {
-    id: 'enterprise.module-api',
-    name: 'Module API',
-    rootId: 'ModuleApi',
+    id: 'enterprise.api-facade.default',
+    name: 'Default API Facade',
+    rootId: 'DefaultApiFacade',
     features,
-    groups: {},
+    groups,
     constraints: [],
     scope: {
-      assetPath: 'platform/module-api/',
-      assetKind: 'folder',
-      modelFileName: 'module-api.fm',
-      ownerLabel: 'Module API scope',
+      assetPath: 'platform/shipment/api-facade-default/',
+      assetKind: 'repo',
+      modelFileName: 'api-facade-default.fm',
+      ownerLabel: 'Default API Facade scope',
       colorToken: '--team-keyboard',
     },
     featureOrder: Object.keys(features),
   };
 }
 
-function microRoutingModel(): FeatureModel {
+function apiFacadePartnerAModel(): FeatureModel {
   const features: Record<string, Feature> = {
-    RoutingApi: feature({
-      id: 'RoutingApi',
-      name: 'Routing (Micro API)',
+    PartnerAApiFacade: feature({
+      id: 'PartnerAApiFacade',
+      name: 'Partner A API Facade',
       parentId: null,
       edge: 'mandatory',
-      childIds: ['RoutingV1', 'RoutingV2', 'RoutingV3'],
-      provides: ['Routing'],
-      note: 'Each consumer pins the version it depends on independently — this is the strongest real-world argument for local configuration spaces.',
+      childIds: ['FieldTranslation'],
+      provides: ['ShipmentApi'],
+      requires: ['ExecutionOrchestration'],
+      note: 'A customer-specific facade, its own repo, exposing a narrower slice — Shipment only, no Tracking.',
     }),
-    RoutingV1: feature({ id: 'RoutingV1', name: 'v1 (locked)', parentId: 'RoutingApi', edge: 'grouped', groupId: 'version' }),
-    RoutingV2: feature({ id: 'RoutingV2', name: 'v2 (locked)', parentId: 'RoutingApi', edge: 'grouped', groupId: 'version' }),
-    RoutingV3: feature({ id: 'RoutingV3', name: 'v3 (__latest__)', parentId: 'RoutingApi', edge: 'grouped', groupId: 'version' }),
+    FieldTranslation: feature({ id: 'FieldTranslation', name: 'Field Translation', parentId: 'PartnerAApiFacade', edge: 'optional' }),
   };
-
-  const groups: Record<string, FeatureGroup> = {
-    version: { id: 'version', parentId: 'RoutingApi', kind: 'xor', memberIds: ['RoutingV1', 'RoutingV2', 'RoutingV3'] },
-  };
-
   return {
-    id: 'enterprise.micro-routing',
-    name: 'Routing',
-    rootId: 'RoutingApi',
+    id: 'enterprise.api-facade.partner-a',
+    name: 'Partner A API Facade',
+    rootId: 'PartnerAApiFacade',
     features,
-    groups,
+    groups: {},
     constraints: [],
     scope: {
-      assetPath: 'platform/micro-apis/routing/',
-      assetKind: 'folder',
-      modelFileName: 'routing.fm',
-      ownerLabel: 'Routing scope',
+      assetPath: 'platform/shipment/api-facade-partner-a/',
+      assetKind: 'repo',
+      modelFileName: 'api-facade-partner-a.fm',
+      ownerLabel: 'Partner A API Facade scope',
       colorToken: '--team-storage',
     },
     featureOrder: Object.keys(features),
   };
 }
 
-function microValidationModel(): FeatureModel {
+function moduleApiExecutionModel(): FeatureModel {
   const features: Record<string, Feature> = {
-    ValidationApi: feature({
-      id: 'ValidationApi',
-      name: 'Validation (Micro API)',
+    ExecutionModuleApi: feature({
+      id: 'ExecutionModuleApi',
+      name: 'Execution Module API',
       parentId: null,
       edge: 'mandatory',
-      childIds: ['ValidationV1', 'ValidationV2'],
-      provides: ['Validation'],
+      childIds: ['Compensation'],
+      provides: ['ExecutionOrchestration', 'TrackingOrchestration'],
+      requires: ['Routing', 'Validation', 'TrackingNumbers'],
+      note: 'A module API is its own repo providing several related capabilities, not one.',
     }),
-    ValidationV1: feature({ id: 'ValidationV1', name: 'v1 (locked)', parentId: 'ValidationApi', edge: 'grouped', groupId: 'version' }),
-    ValidationV2: feature({ id: 'ValidationV2', name: 'v2 (__latest__)', parentId: 'ValidationApi', edge: 'grouped', groupId: 'version' }),
+    Compensation: feature({ id: 'Compensation', name: 'Compensation', parentId: 'ExecutionModuleApi', edge: 'optional' }),
   };
-
-  const groups: Record<string, FeatureGroup> = {
-    version: { id: 'version', parentId: 'ValidationApi', kind: 'xor', memberIds: ['ValidationV1', 'ValidationV2'] },
-  };
-
   return {
-    id: 'enterprise.micro-validation',
-    name: 'Validation',
-    rootId: 'ValidationApi',
+    id: 'enterprise.module-api.execution',
+    name: 'Execution Module API',
+    rootId: 'ExecutionModuleApi',
     features,
-    groups,
+    groups: {},
     constraints: [],
     scope: {
-      assetPath: 'platform/micro-apis/validation/',
-      assetKind: 'folder',
-      modelFileName: 'validation.fm',
-      ownerLabel: 'Validation scope',
+      assetPath: 'platform/shipment/module-api-execution/',
+      assetKind: 'repo',
+      modelFileName: 'module-api-execution.fm',
+      ownerLabel: 'Execution Module API scope',
+      colorToken: '--team-messaging',
+    },
+    featureOrder: Object.keys(features),
+  };
+}
+
+function microApiRoutingModel(version: 'v2' | 'v3'): FeatureModel {
+  const id = version === 'v2' ? 'RoutingV2Api' : 'RoutingV3Api';
+  const features: Record<string, Feature> = {
+    [id]: feature({ id, name: `Routing API (${version})`, parentId: null, edge: 'mandatory', provides: ['Routing'] }),
+  };
+  return {
+    id: `enterprise.micro-api.routing-${version}`,
+    name: `Routing Micro API (${version})`,
+    rootId: id,
+    features,
+    groups: {},
+    constraints: [],
+    scope: {
+      assetPath: `platform/shipment/micro-api-routing-${version}/`,
+      assetKind: 'repo',
+      modelFileName: `routing-${version}.fm`,
+      ownerLabel: `Routing ${version} scope`,
+      colorToken: version === 'v2' ? '--team-connectivity' : '--team-keyboard',
+    },
+    featureOrder: Object.keys(features),
+  };
+}
+
+function microApiValidationModel(): FeatureModel {
+  const features: Record<string, Feature> = {
+    ValidationV1Api: feature({
+      id: 'ValidationV1Api',
+      name: 'Validation API (v1)',
+      parentId: null,
+      edge: 'mandatory',
+      childIds: ['Enabled'],
+    }),
+    Enabled: feature({
+      id: 'Enabled',
+      name: 'Enabled',
+      parentId: 'ValidationV1Api',
+      edge: 'optional',
+      provides: ['Validation'],
+      note: 'A micro API should provide exactly one capability — gated behind an explicit toggle rather than the always-on root, so this scope can demonstrate a real missing-capability state.',
+    }),
+  };
+  return {
+    id: 'enterprise.micro-api.validation-v1',
+    name: 'Validation Micro API (v1)',
+    rootId: 'ValidationV1Api',
+    features,
+    groups: {},
+    constraints: [],
+    scope: {
+      assetPath: 'platform/shipment/micro-api-validation-v1/',
+      assetKind: 'repo',
+      modelFileName: 'validation-v1.fm',
+      ownerLabel: 'Validation v1 scope',
+      colorToken: '--team-storage',
+    },
+    featureOrder: Object.keys(features),
+  };
+}
+
+function microApiTrackingNumbersModel(): FeatureModel {
+  const features: Record<string, Feature> = {
+    TrackingNumbersApi: feature({
+      id: 'TrackingNumbersApi',
+      name: 'Tracking Numbers API',
+      parentId: null,
+      edge: 'mandatory',
+      provides: ['TrackingNumbers'],
+    }),
+  };
+  return {
+    id: 'enterprise.micro-api.tracking-numbers',
+    name: 'Tracking Numbers Micro API',
+    rootId: 'TrackingNumbersApi',
+    features,
+    groups: {},
+    constraints: [],
+    scope: {
+      assetPath: 'platform/shared/micro-api-tracking-numbers/',
+      assetKind: 'repo',
+      modelFileName: 'tracking-numbers.fm',
+      ownerLabel: 'Tracking Numbers scope (shared across products)',
       colorToken: '--surface-muted',
     },
     featureOrder: Object.keys(features),
   };
 }
 
-function microTrackingNumbersModel(): FeatureModel {
+// ---------------------------------------------------------------------------
+// Product: Finance
+// ---------------------------------------------------------------------------
+
+function frontendInvoiceAuditModel(): FeatureModel {
   const features: Record<string, Feature> = {
-    TrackingNumbersApi: feature({
-      id: 'TrackingNumbersApi',
-      name: 'Tracking Numbers (Micro API)',
+    InvoiceAuditFacade: feature({
+      id: 'InvoiceAuditFacade',
+      name: 'Invoice Audit Facade',
       parentId: null,
       edge: 'mandatory',
-      provides: ['TrackingNumbers'],
+      requires: ['InvoiceApi'],
     }),
   };
-
   return {
-    id: 'enterprise.micro-tracking-numbers',
-    name: 'Tracking Numbers',
-    rootId: 'TrackingNumbersApi',
+    id: 'enterprise.frontend.invoice-audit',
+    name: 'Invoice Audit Frontend Facade',
+    rootId: 'InvoiceAuditFacade',
     features,
     groups: {},
     constraints: [],
     scope: {
-      assetPath: 'platform/micro-apis/tracking-numbers/',
-      assetKind: 'folder',
-      modelFileName: 'tracking-numbers.fm',
-      ownerLabel: 'Tracking Numbers scope',
+      assetPath: 'platform/finance/frontend-invoice-audit/',
+      assetKind: 'repo',
+      modelFileName: 'frontend-invoice-audit.fm',
+      ownerLabel: 'Invoice Audit Frontend Facade scope',
       colorToken: '--team-connectivity',
+    },
+    featureOrder: Object.keys(features),
+  };
+}
+
+function apiFacadeFinanceModel(): FeatureModel {
+  const features: Record<string, Feature> = {
+    FinanceApiFacade: feature({
+      id: 'FinanceApiFacade',
+      name: 'Finance API Facade',
+      parentId: null,
+      edge: 'mandatory',
+      childIds: ['AuditLogging'],
+      provides: ['InvoiceApi'],
+      requires: ['FinanceOrchestration'],
+    }),
+    AuditLogging: feature({ id: 'AuditLogging', name: 'Audit Logging', parentId: 'FinanceApiFacade', edge: 'optional' }),
+  };
+  return {
+    id: 'enterprise.api-facade.finance',
+    name: 'Finance API Facade',
+    rootId: 'FinanceApiFacade',
+    features,
+    groups: {},
+    constraints: [],
+    scope: {
+      assetPath: 'platform/finance/api-facade-finance/',
+      assetKind: 'repo',
+      modelFileName: 'api-facade-finance.fm',
+      ownerLabel: 'Finance API Facade scope',
+      colorToken: '--team-keyboard',
+    },
+    featureOrder: Object.keys(features),
+  };
+}
+
+function moduleApiFinanceModel(): FeatureModel {
+  const features: Record<string, Feature> = {
+    FinanceModuleApi: feature({
+      id: 'FinanceModuleApi',
+      name: 'Finance Module API',
+      parentId: null,
+      edge: 'mandatory',
+      childIds: ['Compensation'],
+      provides: ['FinanceOrchestration', 'BillingReconciliation'],
+      requires: ['TrackingNumbers'],
+      note: 'Requires TrackingNumbers from the Shipment product’s micro API — capabilities cross product lines the same way they cross layers.',
+    }),
+    Compensation: feature({ id: 'Compensation', name: 'Compensation', parentId: 'FinanceModuleApi', edge: 'optional' }),
+  };
+  return {
+    id: 'enterprise.module-api.finance',
+    name: 'Finance Module API',
+    rootId: 'FinanceModuleApi',
+    features,
+    groups: {},
+    constraints: [],
+    scope: {
+      assetPath: 'platform/finance/module-api-finance/',
+      assetKind: 'repo',
+      modelFileName: 'module-api-finance.fm',
+      ownerLabel: 'Finance Module API scope',
+      colorToken: '--team-storage',
     },
     featureOrder: Object.keys(features),
   };
@@ -301,16 +409,34 @@ const ASSET_TREE: AssetNode = {
   path: 'platform/',
   kind: 'repo',
   children: [
-    { path: 'platform/frontend-facade/', kind: 'folder', children: [], modelId: 'enterprise.frontend-facade' },
-    { path: 'platform/api-facade/', kind: 'folder', children: [], modelId: 'enterprise.api-facade' },
-    { path: 'platform/module-api/', kind: 'folder', children: [], modelId: 'enterprise.module-api' },
     {
-      path: 'platform/micro-apis/',
+      path: 'platform/shipment/',
       kind: 'folder',
       children: [
-        { path: 'platform/micro-apis/routing/', kind: 'folder', children: [], modelId: 'enterprise.micro-routing' },
-        { path: 'platform/micro-apis/validation/', kind: 'folder', children: [], modelId: 'enterprise.micro-validation' },
-        { path: 'platform/micro-apis/tracking-numbers/', kind: 'folder', children: [], modelId: 'enterprise.micro-tracking-numbers' },
+        { path: 'platform/shipment/frontend-shipment-entry/', kind: 'repo', children: [], modelId: 'enterprise.frontend.shipment-entry' },
+        { path: 'platform/shipment/frontend-tracking/', kind: 'repo', children: [], modelId: 'enterprise.frontend.tracking' },
+        { path: 'platform/shipment/api-facade-default/', kind: 'repo', children: [], modelId: 'enterprise.api-facade.default' },
+        { path: 'platform/shipment/api-facade-partner-a/', kind: 'repo', children: [], modelId: 'enterprise.api-facade.partner-a' },
+        { path: 'platform/shipment/module-api-execution/', kind: 'repo', children: [], modelId: 'enterprise.module-api.execution' },
+        { path: 'platform/shipment/micro-api-routing-v2/', kind: 'repo', children: [], modelId: 'enterprise.micro-api.routing-v2' },
+        { path: 'platform/shipment/micro-api-routing-v3/', kind: 'repo', children: [], modelId: 'enterprise.micro-api.routing-v3' },
+        { path: 'platform/shipment/micro-api-validation-v1/', kind: 'repo', children: [], modelId: 'enterprise.micro-api.validation-v1' },
+      ],
+    },
+    {
+      path: 'platform/shared/',
+      kind: 'folder',
+      children: [
+        { path: 'platform/shared/micro-api-tracking-numbers/', kind: 'repo', children: [], modelId: 'enterprise.micro-api.tracking-numbers' },
+      ],
+    },
+    {
+      path: 'platform/finance/',
+      kind: 'folder',
+      children: [
+        { path: 'platform/finance/frontend-invoice-audit/', kind: 'repo', children: [], modelId: 'enterprise.frontend.invoice-audit' },
+        { path: 'platform/finance/api-facade-finance/', kind: 'repo', children: [], modelId: 'enterprise.api-facade.finance' },
+        { path: 'platform/finance/module-api-finance/', kind: 'repo', children: [], modelId: 'enterprise.module-api.finance' },
       ],
     },
   ],
@@ -318,45 +444,43 @@ const ASSET_TREE: AssetNode = {
 
 const PRESETS: readonly ConfigPreset[] = [
   {
-    id: 'shipment-only',
-    title: 'Shipment, end to end',
+    id: 'everything-wired',
+    title: 'Everything wired',
     description:
-      'The frontend only needs the shipment entry screen. Every layer below independently configures just enough to satisfy it.',
+      'Twelve independently owned repos across two product lines. Every required capability has a provider — Routing even has two, from two entirely separate Micro API repos.',
     selection: {
-      'enterprise.frontend-facade': ['ShipmentEntryUI'],
-      'enterprise.api-facade': ['BearerToken', 'DefaultContract'],
-      'enterprise.module-api': [],
-      'enterprise.micro-routing': ['RoutingV2'],
-      'enterprise.micro-validation': ['ValidationV1'],
-      'enterprise.micro-tracking-numbers': [],
+      'enterprise.frontend.shipment-entry': [],
+      'enterprise.frontend.tracking': [],
+      'enterprise.frontend.invoice-audit': [],
+      'enterprise.api-facade.default': ['BearerToken'],
+      'enterprise.api-facade.partner-a': [],
+      'enterprise.api-facade.finance': [],
+      'enterprise.module-api.execution': [],
+      'enterprise.module-api.finance': [],
+      'enterprise.micro-api.routing-v2': [],
+      'enterprise.micro-api.routing-v3': [],
+      'enterprise.micro-api.validation-v1': ['Enabled'],
+      'enterprise.micro-api.tracking-numbers': [],
     },
   },
   {
-    id: 'routing-v3-consumer',
-    title: 'Same config, Routing v3',
+    id: 'validation-disabled',
+    title: 'Validation not enabled',
     description:
-      'Identical to "Shipment, end to end" except Routing pins __latest__ (v3) instead of v2 — changing it required touching only the Routing scope.',
+      'The Validation v1 repo exists but its capability is toggled off. The resolver notifies only that one repo — not the Execution Module API that needed it, and not any other Micro API.',
     selection: {
-      'enterprise.frontend-facade': ['ShipmentEntryUI'],
-      'enterprise.api-facade': ['BearerToken', 'DefaultContract'],
-      'enterprise.module-api': [],
-      'enterprise.micro-routing': ['RoutingV3'],
-      'enterprise.micro-validation': ['ValidationV1'],
-      'enterprise.micro-tracking-numbers': [],
-    },
-  },
-  {
-    id: 'missing-invoice',
-    title: 'Missing Invoice API',
-    description:
-      'Invoice Audit UI needs InvoiceApi, which Module API only provides when Finance Orchestration is selected. Leave it deselected and the resolver notifies only Module API — two layers away from where the requirement was felt.',
-    selection: {
-      'enterprise.frontend-facade': ['InvoiceAuditUI'],
-      'enterprise.api-facade': ['BearerToken', 'DefaultContract'],
-      'enterprise.module-api': [],
-      'enterprise.micro-routing': ['RoutingV2'],
-      'enterprise.micro-validation': ['ValidationV1'],
-      'enterprise.micro-tracking-numbers': [],
+      'enterprise.frontend.shipment-entry': [],
+      'enterprise.frontend.tracking': [],
+      'enterprise.frontend.invoice-audit': [],
+      'enterprise.api-facade.default': ['BearerToken'],
+      'enterprise.api-facade.partner-a': [],
+      'enterprise.api-facade.finance': [],
+      'enterprise.module-api.execution': [],
+      'enterprise.module-api.finance': [],
+      'enterprise.micro-api.routing-v2': [],
+      'enterprise.micro-api.routing-v3': [],
+      'enterprise.micro-api.validation-v1': [],
+      'enterprise.micro-api.tracking-numbers': [],
     },
   },
 ];
@@ -364,14 +488,21 @@ const PRESETS: readonly ConfigPreset[] = [
 export const ENTERPRISE_EXAMPLE: Example = {
   id: 'enterprise',
   title: 'Layered Platform',
-  blurb: 'A synthetic layered service platform — frontend facade, API facade, module API, and independently versioned micro APIs, strictly downward dependencies, no layer-skipping.',
+  blurb:
+    'A synthetic layered service platform, divided into product lines — every facade, module API, and micro API is its own repo, and capabilities, not APIs, are what actually connect them.',
   models: [
-    frontendFacadeModel(),
-    apiFacadeModel(),
-    moduleApiModel(),
-    microRoutingModel(),
-    microValidationModel(),
-    microTrackingNumbersModel(),
+    frontendShipmentEntryModel(),
+    frontendTrackingModel(),
+    apiFacadeDefaultModel(),
+    apiFacadePartnerAModel(),
+    moduleApiExecutionModel(),
+    microApiRoutingModel('v2'),
+    microApiRoutingModel('v3'),
+    microApiValidationModel(),
+    microApiTrackingNumbersModel(),
+    frontendInvoiceAuditModel(),
+    apiFacadeFinanceModel(),
+    moduleApiFinanceModel(),
   ],
   capabilities: CAPABILITIES,
   globalRules: [],

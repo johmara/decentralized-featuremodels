@@ -22,6 +22,12 @@ describe('every shipped example', () => {
       expect(validateExample(example)).toEqual([]);
     });
 
+    if (example.centralized) {
+      it(`"${id}"'s centralized reference model has no structural data errors`, () => {
+        expect(validateExample({ ...example, models: [example.centralized!] })).toEqual([]);
+      });
+    }
+
     it(`"${id}" resolves every preset without throwing`, () => {
       for (const preset of example.presets) {
         const manual = selectionFromPreset(id, preset.id);
@@ -33,27 +39,49 @@ describe('every shipped example', () => {
 });
 
 describe('enterprise example presets', () => {
-  it('"shipment-only" is globally valid', () => {
-    const manual = selectionFromPreset('enterprise', 'shipment-only');
+  it('"everything-wired" is globally valid, with Routing provided by two separate repos', () => {
+    const manual = selectionFromPreset('enterprise', 'everything-wired');
     const { selection } = propagateAll(EXAMPLES['enterprise'], manual);
-    expect(resolveGlobal(EXAMPLES['enterprise'], selection).valid).toBe(true);
+    const result = resolveGlobal(EXAMPLES['enterprise'], selection);
+    expect(result.valid).toBe(true);
+    expect(result.ledger.provided.get('Routing')?.length).toBe(2);
+    const providerModels = new Set(result.ledger.provided.get('Routing')?.map((ref) => ref.modelId));
+    expect(providerModels).toEqual(new Set(['enterprise.micro-api.routing-v2', 'enterprise.micro-api.routing-v3']));
   });
 
-  it('"routing-v3-consumer" is globally valid and pins v3', () => {
-    const manual = selectionFromPreset('enterprise', 'routing-v3-consumer');
-    const { selection } = propagateAll(EXAMPLES['enterprise'], manual);
-    expect(selection.get('enterprise.micro-routing')?.has('RoutingV3')).toBe(true);
-    expect(resolveGlobal(EXAMPLES['enterprise'], selection).valid).toBe(true);
-  });
-
-  it('"missing-invoice" reports InvoiceApi missing and notifies only Module API', () => {
-    const manual = selectionFromPreset('enterprise', 'missing-invoice');
+  it('"validation-disabled" reports Validation missing and notifies only the Validation v1 repo', () => {
+    const manual = selectionFromPreset('enterprise', 'validation-disabled');
     const { selection } = propagateAll(EXAMPLES['enterprise'], manual);
     const result = resolveGlobal(EXAMPLES['enterprise'], selection);
     expect(result.valid).toBe(false);
-    const missing = result.missing.find((m) => m.capability === 'InvoiceApi');
+    const missing = result.missing.find((m) => m.capability === 'Validation');
     expect(missing?.diagnosis).toBe('unprovisioned');
-    expect(missing?.notifyModels).toEqual(['enterprise.module-api']);
+    expect(missing?.notifyModels).toEqual(['enterprise.micro-api.validation-v1']);
+  });
+
+  it('module APIs and facades each provide more than one capability; micro APIs provide exactly one', () => {
+    const example = EXAMPLES['enterprise'];
+    const moduleAndFacadeIds = [
+      'enterprise.api-facade.default',
+      'enterprise.module-api.execution',
+      'enterprise.module-api.finance',
+    ];
+    for (const modelId of moduleAndFacadeIds) {
+      const model = example.models.find((m) => m.id === modelId)!;
+      const providedByRoot = model.features[model.rootId].provides ?? [];
+      expect(providedByRoot.length).toBeGreaterThan(1);
+    }
+
+    const microApiIds = [
+      'enterprise.micro-api.routing-v2',
+      'enterprise.micro-api.routing-v3',
+      'enterprise.micro-api.tracking-numbers',
+    ];
+    for (const modelId of microApiIds) {
+      const model = example.models.find((m) => m.id === modelId)!;
+      const allProvides = Object.values(model.features).flatMap((f) => f.provides ?? []);
+      expect(allProvides).toHaveLength(1);
+    }
   });
 });
 

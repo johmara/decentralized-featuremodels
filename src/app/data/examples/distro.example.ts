@@ -31,6 +31,82 @@ const CAPABILITIES: readonly Capability[] = [
   { id: 'tls-library', name: 'tls-library', description: 'A TLS implementation packages can link against.' },
 ];
 
+/** The monolith before it is split — same shape as the decentralized models, minus the capability layer. */
+function centralizedModel(): FeatureModel {
+  const features: Record<string, Feature> = {
+    DistroRoot: feature({
+      id: 'DistroRoot',
+      name: 'Distro',
+      parentId: null,
+      edge: 'mandatory',
+      childIds: ['INET', 'JFFS2_FS', 'Desktop', 'Server', 'Minimal', 'SystemdBoot', 'Mail', 'Display'],
+    }),
+    INET: feature({ id: 'INET', name: 'INET', parentId: 'DistroRoot', edge: 'optional', childIds: ['IPV6', 'TcpBbr'] }),
+    IPV6: feature({ id: 'IPV6', name: 'IPv6', parentId: 'INET', edge: 'grouped', groupId: 'net-features' }),
+    TcpBbr: feature({ id: 'TcpBbr', name: 'TCP BBR congestion control', parentId: 'INET', edge: 'grouped', groupId: 'net-features' }),
+
+    JFFS2_FS: feature({
+      id: 'JFFS2_FS',
+      name: 'JFFS2',
+      parentId: 'DistroRoot',
+      edge: 'optional',
+      childIds: ['DebugLevel', 'DefaultCompressionNone', 'DefaultCompressionPriority', 'DefaultCompressionSize', 'CompressData'],
+    }),
+    DebugLevel: feature({ id: 'DebugLevel', name: 'Debug Level', parentId: 'JFFS2_FS', edge: 'mandatory' }),
+    DefaultCompressionNone: feature({ id: 'DefaultCompressionNone', name: 'Default Compression: None', parentId: 'JFFS2_FS', edge: 'grouped', groupId: 'default-compression' }),
+    DefaultCompressionPriority: feature({ id: 'DefaultCompressionPriority', name: 'Default Compression: Priority', parentId: 'JFFS2_FS', edge: 'grouped', groupId: 'default-compression' }),
+    DefaultCompressionSize: feature({ id: 'DefaultCompressionSize', name: 'Default Compression: Size', parentId: 'JFFS2_FS', edge: 'grouped', groupId: 'default-compression' }),
+    CompressData: feature({ id: 'CompressData', name: 'Compress Data', parentId: 'JFFS2_FS', edge: 'optional', childIds: ['ZLIB', 'LZO'] }),
+    ZLIB: feature({ id: 'ZLIB', name: 'ZLIB', parentId: 'CompressData', edge: 'grouped', groupId: 'compressor' }),
+    LZO: feature({ id: 'LZO', name: 'LZO', parentId: 'CompressData', edge: 'grouped', groupId: 'compressor' }),
+
+    Desktop: feature({ id: 'Desktop', name: 'Desktop', parentId: 'DistroRoot', edge: 'grouped', groupId: 'distro-type' }),
+    Server: feature({ id: 'Server', name: 'Server', parentId: 'DistroRoot', edge: 'grouped', groupId: 'distro-type' }),
+    Minimal: feature({ id: 'Minimal', name: 'Minimal', parentId: 'DistroRoot', edge: 'grouped', groupId: 'distro-type' }),
+    SystemdBoot: feature({ id: 'SystemdBoot', name: 'systemd-boot', parentId: 'DistroRoot', edge: 'optional' }),
+
+    Mail: feature({ id: 'Mail', name: 'Mail', parentId: 'DistroRoot', edge: 'mandatory', childIds: ['Postfix', 'Exim', 'TlsSupport'] }),
+    Postfix: feature({ id: 'Postfix', name: 'postfix', parentId: 'Mail', edge: 'grouped', groupId: 'mta' }),
+    Exim: feature({ id: 'Exim', name: 'exim', parentId: 'Mail', edge: 'grouped', groupId: 'mta' }),
+    TlsSupport: feature({ id: 'TlsSupport', name: 'TLS Support', parentId: 'Mail', edge: 'optional' }),
+
+    Display: feature({ id: 'Display', name: 'Display', parentId: 'DistroRoot', edge: 'mandatory', childIds: ['Xorg', 'Wayland'] }),
+    Xorg: feature({ id: 'Xorg', name: 'Xorg', parentId: 'Display', edge: 'grouped', groupId: 'display-type' }),
+    Wayland: feature({ id: 'Wayland', name: 'Wayland', parentId: 'Display', edge: 'grouped', groupId: 'display-type' }),
+  };
+
+  const groups: Record<string, FeatureGroup> = {
+    'net-features': { id: 'net-features', parentId: 'INET', kind: 'or', memberIds: ['IPV6', 'TcpBbr'] },
+    'default-compression': {
+      id: 'default-compression',
+      parentId: 'JFFS2_FS',
+      kind: 'xor',
+      memberIds: ['DefaultCompressionNone', 'DefaultCompressionPriority', 'DefaultCompressionSize'],
+    },
+    compressor: { id: 'compressor', parentId: 'CompressData', kind: 'or', memberIds: ['ZLIB', 'LZO'] },
+    'distro-type': { id: 'distro-type', parentId: 'DistroRoot', kind: 'or', memberIds: ['Desktop', 'Server', 'Minimal'] },
+    mta: { id: 'mta', parentId: 'Mail', kind: 'xor', memberIds: ['Postfix', 'Exim'] },
+    'display-type': { id: 'display-type', parentId: 'Display', kind: 'xor', memberIds: ['Xorg', 'Wayland'] },
+  };
+
+  return {
+    id: 'distro.centralized',
+    name: 'Distro (centralized)',
+    rootId: 'DistroRoot',
+    features,
+    groups,
+    constraints: [],
+    scope: {
+      assetPath: '/ (undivided)',
+      assetKind: 'repo',
+      modelFileName: 'distro.fm',
+      ownerLabel: 'Whoever owns the whole distro',
+      colorToken: '--surface-muted',
+    },
+    featureOrder: Object.keys(features),
+  };
+}
+
 function kernelNetModel(): FeatureModel {
   const features: Record<string, Feature> = {
     KernelNet: feature({ id: 'KernelNet', name: 'Kernel Networking', parentId: null, edge: 'mandatory', childIds: ['INET'] }),
@@ -355,6 +431,7 @@ export const DISTRO_EXAMPLE: Example = {
   id: 'distro',
   title: 'Open-Source Distribution',
   blurb: 'A kernel subsystem, a filesystem, a distro integrator, and independent packages — no central owner at all.',
+  centralized: centralizedModel(),
   models: [
     kernelNetModel(),
     jffs2Model(),
