@@ -1,0 +1,45 @@
+.ftl,
+.ftl ul {
+  list-style: none;
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+.ftl {
+  padding-left: 0;
+}
+
+.ftl__item {
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.ftl__label {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.ftl__label--manual {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  font-weight: 600;
+}
+
+.ftl__label--derived {
+  border: 1px dashed var(--accent);
+}
+
+.ftl__label--dead {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.ftl__meta {
+  margin-left: var(--space-2);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.ftl__item:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}

@@ -23,12 +23,21 @@
           <p class="card__owner">{{ card.model.scope.ownerLabel }}</p>
         </header>
 
-        <app-feature-tree
-          [model]="card.model"
-          [propagation]="card.propagation"
-          [disabled]="isLockedOut(card.model.id)"
-          (toggle)="onToggle(card.model.id, $event)"
-        ></app-feature-tree>
+        @if (listView()) {
+          <app-feature-tree-list
+            [model]="card.model"
+            [propagation]="card.propagation"
+            [disabled]="isLockedOut(card.model.id)"
+            (toggle)="onToggle(card.model.id, $event)"
+          ></app-feature-tree-list>
+        } @else {
+          <app-feature-tree
+            [model]="card.model"
+            [propagation]="card.propagation"
+            [disabled]="isLockedOut(card.model.id)"
+            (toggle)="onToggle(card.model.id, $event)"
+          ></app-feature-tree>
+        }
 
         <footer class="card__footer">
           <app-validity-badge [valid]="card.localValidity.valid" validLabel="Locally valid" invalidLabel="Locally invalid"></app-validity-badge>

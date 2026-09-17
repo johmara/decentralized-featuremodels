@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FeatureTree } from '../../ui/feature-tree';
+import { FeatureTreeList } from '../../ui/feature-tree-list';
 import { Legend } from '../../ui/legend';
 import { DecentralizedView } from './decentralized-view';
 import { ConfigStore, type Mode } from '../../core/state/config.store';
@@ -14,7 +15,7 @@ import type { FeatureRef, ModelId } from '../../core/model/feature-model.types';
 
 @Component({
   selector: 'app-example-page',
-  imports: [FeatureTree, Legend, DecentralizedView, RouterLink, TourAnchorDirective],
+  imports: [FeatureTree, FeatureTreeList, Legend, DecentralizedView, RouterLink, TourAnchorDirective],
   templateUrl: './example-page.html',
   styleUrl: './example-page.scss',
 })
@@ -29,6 +30,7 @@ export class ExamplePage {
 
   protected readonly shareStatus = signal<'idle' | 'copied' | 'manual'>('idle');
   protected readonly shareLink = signal<string | null>(null);
+  protected readonly listView = signal(false);
 
   /**
    * Runs whenever the route's exampleId changes: (re)selects the example,
@@ -139,5 +141,9 @@ export class ExamplePage {
 
   selectAll(event: Event): void {
     (event.target as HTMLInputElement).select();
+  }
+
+  toggleListView(): void {
+    this.listView.update((v) => !v);
   }
 }

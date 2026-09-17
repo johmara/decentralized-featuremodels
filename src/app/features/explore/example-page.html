@@ -17,6 +17,9 @@
     <button type="button" role="tab" [attr.aria-selected]="store.mode() === 'decentralized'" [class.active]="store.mode() === 'decentralized'" (click)="setMode('decentralized')">
       Decentralized
     </button>
+    <button type="button" class="example-page__list-toggle" [attr.aria-pressed]="listView()" (click)="toggleListView()">
+      {{ listView() ? 'Switch to tree view' : 'Switch to list view (screen readers)' }}
+    </button>
   </div>
 
   @if (store.mode() === 'centralized') {
@@ -27,7 +30,11 @@
           Decentralized to configure it.
         </p>
         @if (centralizedPropagation(); as prop) {
-          <app-feature-tree [model]="centralModel" [propagation]="prop" [disabled]="true"></app-feature-tree>
+          @if (listView()) {
+            <app-feature-tree-list [model]="centralModel" [propagation]="prop" [disabled]="true"></app-feature-tree-list>
+          } @else {
+            <app-feature-tree [model]="centralModel" [propagation]="prop" [disabled]="true"></app-feature-tree>
+          }
         }
       </section>
     } @else {
@@ -59,6 +66,7 @@
       [global]="store.global()"
       [globalExplanations]="globalExplanations()"
       [activeScope]="store.activeScope()"
+      [listView]="listView()"
       (toggle)="onToggle($event)"
       (scopeSelect)="onScopeSelect($event)"
     ></app-decentralized-view>

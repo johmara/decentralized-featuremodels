@@ -1,0 +1,33 @@
+.paper-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4) var(--space-8);
+  line-height: 1.6;
+}
+
+.paper-page__citation {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-muted);
+}
+
+.paper-page__citation h2 {
+  margin: 0 0 var(--space-1);
+  font-size: 1.05rem;
+}
+
+.paper-page__authors {
+  margin: 0;
+}
+
+.paper-page__venue {
+  margin: 2px 0 0;
+  color: var(--text-muted);
+}
+
+.paper-page__note {
+  margin: var(--space-2) 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}

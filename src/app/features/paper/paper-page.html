@@ -1,0 +1,49 @@
+<main class="paper-page">
+  <h1>About this site</h1>
+
+  <p>
+    This is an unofficial, independently built companion site for the paper below. It is not part
+    of the paper's official publication and was built to make the ideas explorable, not to
+    replace reading it.
+  </p>
+
+  <section class="paper-page__citation">
+    <h2>Towards Decentralized Feature Models</h2>
+    <p class="paper-page__authors">
+      Mukelabai Mukelabai, Johan Martinson, Wardah Mahmood, Thorsten Berger, Rafael Capilla
+    </p>
+    <p class="paper-page__venue">Variability 2026 (Springer LNCS)</p>
+    <p class="paper-page__note">Final citation details (pages, DOI) are set upon publication.</p>
+  </section>
+
+  <section>
+    <h2>Abstract</h2>
+    <p>
+      Feature models are foundational to variability management, yet most existing techniques
+      assume a conceptually single feature model — even when technically partitioned across files
+      or views. This assumption is increasingly misaligned with modular and ecosystem-scale
+      development, where variability is distributed across subsystems owned and evolved by
+      different teams. This paper advances the notion of decentralized feature modeling, in which
+      multiple asset-level feature models coexist, each with an explicit scope and owner, and
+      global consistency is achieved through capability-based cross-model constraints rather than
+      reconstruction of a monolithic model. It demonstrates how decentralized models can be
+      structured, how capabilities express cross-team dependencies, and how distributed
+      configuration ensures global satisfiability while preserving local autonomy. No existing
+      modular, multi-view, or multi-level feature modeling technique fully addresses placement,
+      independent configuration, and incremental analysis in an integrated manner — the paper
+      derives requirements for decentralized modeling and identifies research challenges around
+      decomposition, capability governance, cross-model reasoning, and scalable distributed
+      analysis.
+    </p>
+  </section>
+
+  <section>
+    <h2>What this site adds, and what it changes</h2>
+    <ul>
+      <li>The phone example (definition, capability wiring, formulas) is reproduced from the paper as data, and rendered as live, interactive SVG rather than the paper's static figures.</li>
+      <li>The layered-platform example is a synthetic, generalized illustration of a real architectural pattern — no real company, tenant, service, or repository names appear anywhere on this site.</li>
+      <li>The open-source distribution example is original to this site, built from real anchors (Kconfig's <code>depends on INET</code>, package <code>Provides:</code>/<code>Requires:</code> metadata) the paper cites as informal precedent for capabilities.</li>
+      <li>The guided tour, sandbox editor, and share links are original interactive additions — the paper itself is a vision/survey paper with no prototype.</li>
+    </ul>
+  </section>
+</main>

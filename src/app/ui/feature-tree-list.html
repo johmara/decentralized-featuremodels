@@ -1,0 +1,29 @@
+<ul class="ftl" role="tree" [attr.aria-label]="model().name + ' feature list'">
+  <ng-container *ngTemplateOutlet="node; context: { id: model().rootId }"></ng-container>
+</ul>
+
+<ng-template #node let-id="id">
+  <li
+    class="ftl__item"
+    role="treeitem"
+    tabindex="0"
+    [attr.aria-selected]="isSelected(id)"
+    [attr.aria-expanded]="hasChildren(id) ? true : null"
+    [attr.aria-disabled]="disabled() || null"
+    (click)="onActivate(id)"
+    (keydown)="onKeydown($event, id)"
+  >
+    <span class="ftl__label" [class]="'ftl__label--' + stateOf(id)">
+      {{ featureOf(id).name }}
+      <span class="ftl__meta">{{ featureOf(id).edge }}, {{ stateLabel(id) }}</span>
+    </span>
+
+    @if (hasChildren(id)) {
+      <ul role="group">
+        @for (childId of childrenOf(id); track childId) {
+          <ng-container *ngTemplateOutlet="node; context: { id: childId }"></ng-container>
+        }
+      </ul>
+    }
+  </li>
+</ng-template>

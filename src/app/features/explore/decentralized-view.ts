@@ -1,5 +1,6 @@
 import { Component, computed, input, output } from '@angular/core';
 import { FeatureTree } from '../../ui/feature-tree';
+import { FeatureTreeList } from '../../ui/feature-tree-list';
 import { ValidityBadge } from '../../ui/validity-badge';
 import { ExplanationList } from '../../ui/explanation-list';
 import { CapabilityLane } from '../../ui/capability-lane';
@@ -26,7 +27,7 @@ interface ModelCardView {
  */
 @Component({
   selector: 'app-decentralized-view',
-  imports: [FeatureTree, ValidityBadge, ExplanationList, CapabilityLane, TourAnchorDirective],
+  imports: [FeatureTree, FeatureTreeList, ValidityBadge, ExplanationList, CapabilityLane, TourAnchorDirective],
   templateUrl: './decentralized-view.html',
   styleUrl: './decentralized-view.scss',
 })
@@ -38,6 +39,7 @@ export class DecentralizedView {
   readonly global = input.required<GlobalResult>();
   readonly globalExplanations = input.required<readonly Explanation[]>();
   readonly activeScope = input<ModelId | null>(null);
+  readonly listView = input(false);
 
   readonly toggle = output<FeatureRef>();
   readonly scopeSelect = output<ModelId | null>();
