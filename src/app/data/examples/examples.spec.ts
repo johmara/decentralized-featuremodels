@@ -67,6 +67,20 @@ describe('enterprise example presets', () => {
     expect(missing?.notifyModels).toEqual(['enterprise.micro-api.validation-v1']);
   });
 
+  it('"dangerous-goods" is globally valid, with DangerousGoods required by two independent frontends and provided by one Module API', () => {
+    const manual = selectionFromPreset('enterprise', 'dangerous-goods');
+    const { selection } = propagateAll(EXAMPLES['enterprise'], manual);
+    const result = resolveGlobal(EXAMPLES['enterprise'], selection);
+    expect(result.valid).toBe(true);
+
+    const requirers = new Set(result.ledger.required.get('DangerousGoods')?.map((ref) => ref.modelId));
+    expect(requirers).toEqual(new Set(['enterprise.frontend.shipment-portal', 'enterprise.frontend.tracking-portal']));
+
+    const providers = result.ledger.provided.get('DangerousGoods');
+    expect(providers).toHaveLength(1);
+    expect(providers?.[0].modelId).toBe('enterprise.module-api.execution');
+  });
+
   it('no capability id is named after the API/layer that exposes it', () => {
     const bannedSuffixes = ['Api', 'Orchestration'];
     for (const capability of EXAMPLES['enterprise'].capabilities) {

@@ -58,6 +58,11 @@ const CAPABILITIES: readonly Capability[] = [
       'Determining what a shipment costs to move. No single repo owns this outright — the rating side and the billing side each provide part of it.',
     vocabularyNote: 'Provided jointly by the Execution Module API and the Finance Module API — see the note on either.',
   },
+  {
+    id: 'DangerousGoods',
+    name: 'Dangerous Goods',
+    description: 'Handling and compliance for shipments containing dangerous or hazardous goods.',
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -71,7 +76,16 @@ function frontendShipmentPortalModel(): FeatureModel {
       name: 'Shipment Portal',
       parentId: null,
       edge: 'mandatory',
+      childIds: ['DangerousGoods'],
       requires: ['ShipmentCreation'],
+    }),
+    DangerousGoods: feature({
+      id: 'DangerousGoods',
+      name: 'Dangerous Goods',
+      parentId: 'ShipmentPortal',
+      edge: 'optional',
+      requires: ['DangerousGoods'],
+      note: 'A local toggle — selecting it requires the shared DangerousGoods capability, provided by the Execution Module API.',
     }),
   };
   return {
@@ -99,7 +113,16 @@ function frontendTrackingPortalModel(): FeatureModel {
       name: 'Tracking Portal',
       parentId: null,
       edge: 'mandatory',
+      childIds: ['DangerousGoods'],
       requires: ['ShipmentTracking'],
+    }),
+    DangerousGoods: feature({
+      id: 'DangerousGoods',
+      name: 'Dangerous Goods',
+      parentId: 'TrackingPortal',
+      edge: 'optional',
+      requires: ['DangerousGoods'],
+      note: 'A local toggle — selecting it requires the shared DangerousGoods capability, provided by the Execution Module API.',
     }),
   };
   return {
@@ -204,9 +227,9 @@ function moduleApiExecutionModel(): FeatureModel {
       parentId: null,
       edge: 'mandatory',
       childIds: ['Compensation'],
-      provides: ['ShipmentExecution', 'FreightCalculation'],
+      provides: ['ShipmentExecution', 'FreightCalculation', 'DangerousGoods'],
       requires: ['CarrierRouting', 'ShipmentValidation', 'TrackingNumberIssuance'],
-      note: 'A module API is its own repo providing several related capabilities, not one — and Freight Calculation here is only the rating side of it. The Finance Module API provides the other side.',
+      note: 'A module API is its own repo providing several related capabilities, not one — Freight Calculation here is only the rating side of it (the Finance Module API provides the other side), and DangerousGoods is required by two entirely separate frontend repos whenever either one turns its own Dangerous Goods feature on.',
     }),
     Compensation: feature({ id: 'Compensation', name: 'Compensation', parentId: 'ExecutionModuleApi', edge: 'optional' }),
   };
@@ -452,6 +475,25 @@ const PRESETS: readonly ConfigPreset[] = [
       'enterprise.micro-api.routing-v2': [],
       'enterprise.micro-api.routing-v3': [],
       'enterprise.micro-api.validation-v1': [],
+      'enterprise.micro-api.tracking-numbers': [],
+    },
+  },
+  {
+    id: 'dangerous-goods',
+    title: 'Dangerous Goods, from two portals at once',
+    description:
+      'Shipment Portal and Tracking Portal each have their own local Dangerous Goods toggle. Switch either one on and it requires the same shared DangerousGoods capability — both are satisfied by the one Execution Module API, independently of each other.',
+    selection: {
+      'enterprise.frontend.shipment-portal': ['DangerousGoods'],
+      'enterprise.frontend.tracking-portal': ['DangerousGoods'],
+      'enterprise.frontend.invoice-portal': [],
+      'enterprise.api-facade.default': ['BearerToken'],
+      'enterprise.api-facade.partner-a': [],
+      'enterprise.module-api.execution': [],
+      'enterprise.module-api.finance': [],
+      'enterprise.micro-api.routing-v2': [],
+      'enterprise.micro-api.routing-v3': [],
+      'enterprise.micro-api.validation-v1': ['Enabled'],
       'enterprise.micro-api.tracking-numbers': [],
     },
   },
