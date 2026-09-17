@@ -1,0 +1,44 @@
+<ul class="lane" aria-label="Capabilities">
+  @for (pill of pills(); track pill.capability.id) {
+    <li
+      class="pill"
+      [class.pill--satisfied]="pill.status === 'satisfied'"
+      [class.pill--unprovisioned]="pill.status === 'unprovisioned'"
+      [class.pill--unprovidable]="pill.status === 'unprovidable'"
+      [class.pill--idle]="pill.status === 'idle'"
+    >
+      <div class="pill__head">
+        <span class="pill__icon" aria-hidden="true">
+          @switch (pill.status) {
+            @case ('satisfied') { &#10003; }
+            @case ('unprovisioned') { &#9888; }
+            @case ('unprovidable') { &#10007; }
+            @default { &middot; }
+          }
+        </span>
+        <span class="pill__name">{{ pill.capability.name }}</span>
+        <span class="pill__status-text">
+          @switch (pill.status) {
+            @case ('satisfied') { provided }
+            @case ('unprovisioned') { missing }
+            @case ('unprovidable') { no provider exists }
+            @default { not needed right now }
+          }
+        </span>
+      </div>
+
+      @if (pill.requiredByScopes.length > 0) {
+        <p class="pill__line">Required by {{ pill.requiredByScopes.join(', ') }}</p>
+      }
+      @if (pill.providedByScopes.length > 0) {
+        <p class="pill__line">Provided by {{ pill.providedByScopes.join(', ') }}</p>
+      }
+      @if (pill.status === 'unprovisioned' && pill.notifyScopes.length > 0) {
+        <p class="pill__line pill__line--notify">Notify only {{ pill.notifyScopes.join(', ') }} — no other scope can fix this.</p>
+      }
+      @if (pill.status === 'unprovidable') {
+        <p class="pill__line pill__line--notify">No scope in this example provides this capability — a governance gap, not a configuration mistake.</p>
+      }
+    </li>
+  }
+</ul>

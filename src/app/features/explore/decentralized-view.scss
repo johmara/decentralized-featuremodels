@@ -1,0 +1,73 @@
+.canvas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.canvas__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+
+.card {
+  border: 1.5px solid var(--border);
+  border-top-width: 5px;
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  background: var(--surface-raised);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  transition: box-shadow var(--transition-fast);
+}
+
+.card--active {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.card--locked-out {
+  opacity: 0.55;
+}
+
+.card__header h3 {
+  margin: var(--space-1) 0 2px;
+  font-size: 1rem;
+}
+
+.card__scope,
+.card__owner {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.card__scope code {
+  font-size: 0.72rem;
+}
+
+.card__lock {
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 2px var(--space-2);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.card__lock--active {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.card__footer {
+  margin-top: auto;
+}
+
+.canvas__capabilities h3,
+.canvas__resolver h3 {
+  margin: 0 0 var(--space-2);
+  font-size: 0.95rem;
+}

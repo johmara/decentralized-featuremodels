@@ -29,3 +29,8 @@
 .app-nav__brand {
   font-weight: 700;
 }
+
+.app-nav__links {
+  display: flex;
+  gap: var(--space-4);
+}

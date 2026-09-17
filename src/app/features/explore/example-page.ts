@@ -1,17 +1,16 @@
 import { Component, computed, effect, inject, input } from '@angular/core';
 import { FeatureTree } from '../../ui/feature-tree';
-import { ValidityBadge } from '../../ui/validity-badge';
-import { ExplanationList } from '../../ui/explanation-list';
 import { Legend } from '../../ui/legend';
+import { DecentralizedView } from './decentralized-view';
 import { ConfigStore, type Mode } from '../../core/state/config.store';
 import { explainMissingCapability, explainRuleViolation } from '../../core/engine/resolver';
 import type { Explanation } from '../../core/engine/explain';
 import type { ModelPropagation } from '../../core/engine/propagate';
-import type { ModelId } from '../../core/model/feature-model.types';
+import type { FeatureRef, ModelId } from '../../core/model/feature-model.types';
 
 @Component({
   selector: 'app-example-page',
-  imports: [FeatureTree, ValidityBadge, ExplanationList, Legend],
+  imports: [FeatureTree, Legend, DecentralizedView],
   templateUrl: './example-page.html',
   styleUrl: './example-page.scss',
 })
@@ -23,22 +22,6 @@ export class ExamplePage {
   private readonly syncExample = effect(() => {
     this.store.setExample(this.exampleId());
   });
-
-  protected readonly activeModelId = computed<ModelId>(
-    () => this.store.activeScope() ?? this.store.example().models[0].id,
-  );
-
-  protected readonly activeModel = computed(
-    () => this.store.example().models.find((model) => model.id === this.activeModelId())!,
-  );
-
-  protected readonly activePropagation = computed(
-    () => this.store.propagation().byModel.get(this.activeModelId())!,
-  );
-
-  protected readonly activeLocalValidity = computed(
-    () => this.store.localResults().get(this.activeModelId())!,
-  );
 
   /** Structure-only view of the centralized reference model — no synthetic configuration is implied. */
   protected readonly centralizedPropagation = computed<ModelPropagation | null>(() => {
@@ -65,12 +48,12 @@ export class ExamplePage {
     ];
   });
 
-  selectScope(modelId: ModelId): void {
-    this.store.setScope(modelId);
+  onToggle(ref: FeatureRef): void {
+    this.store.toggle(ref);
   }
 
-  onToggle(featureId: string): void {
-    this.store.toggle({ modelId: this.activeModelId(), featureId });
+  onScopeSelect(modelId: ModelId | null): void {
+    this.store.setScope(modelId);
   }
 
   loadPreset(id: string): void {

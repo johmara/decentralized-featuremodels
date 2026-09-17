@@ -28,23 +28,6 @@
       <p class="example-page__note">This example has no natural monolithic counterpart.</p>
     }
   } @else {
-    <div class="example-page__scopes" role="tablist" aria-label="Scopes">
-      @for (model of store.example().models; track model.id) {
-        <button
-          type="button"
-          role="tab"
-          class="scope-tab"
-          [attr.aria-selected]="activeModelId() === model.id"
-          [class.active]="activeModelId() === model.id"
-          [style.border-bottom-color]="'var(' + model.scope.colorToken + ')'"
-          (click)="selectScope(model.id)"
-        >
-          {{ model.name }}
-          <span class="scope-tab__file">{{ model.scope.modelFileName }}</span>
-        </button>
-      }
-    </div>
-
     <div class="example-page__presets">
       @for (preset of store.example().presets; track preset.id) {
         <button type="button" [title]="preset.description" (click)="loadPreset(preset.id)">{{ preset.title }}</button>
@@ -52,31 +35,17 @@
       <button type="button" class="example-page__reset" (click)="reset()">Reset</button>
     </div>
 
-    <div class="example-page__body">
-      <section class="example-page__tree">
-        <app-feature-tree [model]="activeModel()" [propagation]="activePropagation()" (toggle)="onToggle($event)"></app-feature-tree>
-      </section>
-
-      <aside class="example-page__panel">
-        <h2>{{ activeModel().name }} — local validity</h2>
-        <app-validity-badge [valid]="activeLocalValidity().valid"></app-validity-badge>
-        <app-explanation-list
-          [explanations]="activeLocalValidity().violations"
-          emptyText="This scope is locally valid."
-        ></app-explanation-list>
-
-        <h2>Global (resolver)</h2>
-        <app-validity-badge
-          [valid]="store.global().valid"
-          validLabel="Globally valid"
-          invalidLabel="Globally invalid"
-        ></app-validity-badge>
-        <app-explanation-list
-          [explanations]="globalExplanations()"
-          emptyText="Every required capability is provided, and no global rule is violated."
-        ></app-explanation-list>
-      </aside>
-    </div>
+    <app-decentralized-view
+      [example]="store.example()"
+      [propagation]="store.propagation()"
+      [localResults]="store.localResults()"
+      [ledger]="store.ledger()"
+      [global]="store.global()"
+      [globalExplanations]="globalExplanations()"
+      [activeScope]="store.activeScope()"
+      (toggle)="onToggle($event)"
+      (scopeSelect)="onScopeSelect($event)"
+    ></app-decentralized-view>
   }
 
   <footer class="example-page__legend">

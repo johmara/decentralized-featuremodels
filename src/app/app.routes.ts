@@ -15,6 +15,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/explore/example-page').then((m) => m.ExamplePage),
   },
   {
+    path: 'compare',
+    loadComponent: () => import('./features/compare/compare-page').then((m) => m.ComparePage),
+  },
+  {
     path: '**',
     loadComponent: () => import('./features/not-found/not-found-page').then((m) => m.NotFoundPage),
   },

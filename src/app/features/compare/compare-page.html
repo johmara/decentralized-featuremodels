@@ -1,0 +1,22 @@
+<main class="compare-page">
+  <header>
+    <h1>Why not an existing technique?</h1>
+    <p>
+      Modular, multi-view, and multi-level feature modeling all help organize a large model. None
+      of them let the model itself stop being one thing. This table checks each against the same
+      four questions decentralization answers together.
+    </p>
+  </header>
+
+  <app-comparison-table [rows]="rows"></app-comparison-table>
+
+  <section class="compare-page__formulas">
+    <h2>The formalism, in one place</h2>
+    <p>Every formula shown elsewhere on this site, gathered here with its paper reference.</p>
+    <div class="compare-page__formula-grid">
+      @for (formula of formulas; track formula.id) {
+        <app-formula [formula]="formula"></app-formula>
+      }
+    </div>
+  </section>
+</main>

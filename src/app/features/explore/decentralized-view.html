@@ -1,0 +1,52 @@
+<div class="canvas">
+  <div class="canvas__cards">
+    @for (card of cards(); track card.model.id) {
+      <section
+        class="card"
+        [style.border-top-color]="'var(' + card.model.scope.colorToken + ')'"
+        [class.card--active]="isEditing(card.model.id)"
+        [class.card--locked-out]="isLockedOut(card.model.id)"
+      >
+        <header class="card__header">
+          <button
+            type="button"
+            class="card__lock"
+            [class.card__lock--active]="isEditing(card.model.id)"
+            [attr.aria-pressed]="isEditing(card.model.id)"
+            (click)="onLockToggle(card.model.id)"
+          >
+            {{ isEditing(card.model.id) ? 'Editing — click to unlock' : 'Locked — click to edit' }}
+          </button>
+          <h3>{{ card.model.name }}</h3>
+          <p class="card__scope">{{ card.model.scope.assetPath }} <code>{{ card.model.scope.modelFileName }}</code></p>
+          <p class="card__owner">{{ card.model.scope.ownerLabel }}</p>
+        </header>
+
+        <app-feature-tree
+          [model]="card.model"
+          [propagation]="card.propagation"
+          [disabled]="isLockedOut(card.model.id)"
+          (toggle)="onToggle(card.model.id, $event)"
+        ></app-feature-tree>
+
+        <footer class="card__footer">
+          <app-validity-badge [valid]="card.localValidity.valid" validLabel="Locally valid" invalidLabel="Locally invalid"></app-validity-badge>
+        </footer>
+      </section>
+    }
+  </div>
+
+  <section class="canvas__capabilities">
+    <h3>Capabilities</h3>
+    <app-capability-lane [example]="example()" [ledger]="ledger()" [missing]="global().missing"></app-capability-lane>
+  </section>
+
+  <section class="canvas__resolver">
+    <h3>Global resolver</h3>
+    <app-validity-badge [valid]="global().valid" validLabel="Globally valid" invalidLabel="Globally invalid"></app-validity-badge>
+    <app-explanation-list
+      [explanations]="globalExplanations()"
+      emptyText="Every required capability is provided, and no global rule is violated."
+    ></app-explanation-list>
+  </section>
+</div>

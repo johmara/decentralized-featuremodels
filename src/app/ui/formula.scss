@@ -1,0 +1,26 @@
+.formula {
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+}
+
+.formula__display {
+  display: block;
+  font-size: 1.05rem;
+  font-family: var(--font-mono);
+  margin-bottom: var(--space-2);
+}
+
+.formula__caption {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.formula__ref {
+  margin-left: var(--space-1);
+  color: var(--text-muted);
+  text-decoration: underline dotted;
+  cursor: help;
+}

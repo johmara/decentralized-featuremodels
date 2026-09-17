@@ -1,0 +1,7 @@
+<figure class="formula">
+  <code class="formula__display" [attr.aria-label]="formula().plainText">{{ formula().display }}</code>
+  <figcaption class="formula__caption">
+    {{ formula().caption }}
+    <a class="formula__ref" [attr.title]="'Paper reference: ' + formula().paperRef">[{{ formula().paperRef }}]</a>
+  </figcaption>
+</figure>

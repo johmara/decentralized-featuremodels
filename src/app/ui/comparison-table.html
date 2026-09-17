@@ -1,0 +1,28 @@
+<table class="comparison">
+  <caption class="sr-only">Comparison of feature modeling techniques against four decentralization axes</caption>
+  <thead>
+    <tr>
+      <th scope="col">Technique</th>
+      <th scope="col">Global FM required</th>
+      <th scope="col">Independent models</th>
+      <th scope="col">Asset-level scope</th>
+      <th scope="col">Distributed config</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (row of rows(); track row.technique) {
+      <tr [class.comparison__row--highlight]="row.technique === 'Decentralized feature models'">
+        <th scope="row">
+          {{ row.technique }}
+          @if (row.note) {
+            <p class="comparison__note">{{ row.note }}</p>
+          }
+        </th>
+        <td [class]="'cell cell--' + row.globalFm">{{ cellText(row.globalFm) }}</td>
+        <td [class]="'cell cell--' + row.independentModels">{{ cellText(row.independentModels) }}</td>
+        <td [class]="'cell cell--' + row.assetScope">{{ cellText(row.assetScope) }}</td>
+        <td [class]="'cell cell--' + row.distributedConfig">{{ cellText(row.distributedConfig) }}</td>
+      </tr>
+    }
+  </tbody>
+</table>

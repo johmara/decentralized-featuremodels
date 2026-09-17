@@ -1,0 +1,53 @@
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.comparison {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.comparison th,
+.comparison td {
+  border: 1px solid var(--border);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  vertical-align: top;
+}
+
+.comparison thead th {
+  background: var(--surface-muted);
+}
+
+.comparison__row--highlight th {
+  font-weight: 700;
+}
+
+.comparison__note {
+  margin: 4px 0 0;
+  font-weight: 400;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.cell {
+  text-align: center;
+  font-weight: 600;
+}
+
+.cell--yes {
+  color: var(--success);
+}
+
+.cell--no {
+  color: var(--danger);
+}
+
+.cell--partial {
+  color: var(--text-muted);
+}
