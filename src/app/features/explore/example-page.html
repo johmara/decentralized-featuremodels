@@ -10,7 +10,7 @@
     <p>{{ store.example().blurb }}</p>
   </header>
 
-  <div class="example-page__mode" role="tablist" aria-label="View mode">
+  <div class="example-page__mode" role="tablist" aria-label="View mode" [appTourAnchor]="'mode-toggle'">
     <button type="button" role="tab" [attr.aria-selected]="store.mode() === 'centralized'" [class.active]="store.mode() === 'centralized'" (click)="setMode('centralized')">
       Centralized
     </button>

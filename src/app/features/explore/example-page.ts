@@ -7,13 +7,14 @@ import { ConfigStore, type Mode } from '../../core/state/config.store';
 import { decodeSelection, encodeSelection } from '../../core/url/config-codec';
 import { explainMissingCapability, explainRuleViolation } from '../../core/engine/resolver';
 import { EXAMPLES, EXAMPLE_IDS } from '../../data/examples';
+import { TourAnchorDirective } from '../../core/tour/tour-anchor.directive';
 import type { Explanation } from '../../core/engine/explain';
 import type { ModelPropagation } from '../../core/engine/propagate';
 import type { FeatureRef, ModelId } from '../../core/model/feature-model.types';
 
 @Component({
   selector: 'app-example-page',
-  imports: [FeatureTree, Legend, DecentralizedView, RouterLink],
+  imports: [FeatureTree, Legend, DecentralizedView, RouterLink, TourAnchorDirective],
   templateUrl: './example-page.html',
   styleUrl: './example-page.scss',
 })

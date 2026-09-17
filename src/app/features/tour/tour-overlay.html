@@ -1,0 +1,21 @@
+@if (tourStore.currentStep(); as step) {
+  <app-spotlight-overlay [anchorId]="step.anchor ?? null"></app-spotlight-overlay>
+
+  <div class="tour-card" role="dialog" aria-live="polite" [attr.aria-label]="step.narration.title">
+    <p class="tour-card__progress">Step {{ tourStore.stepNumber() }} of {{ tourStore.stepCount() }}</p>
+    <h2 class="tour-card__title">{{ step.narration.title }}</h2>
+    <p class="tour-card__body">{{ step.narration.body }}</p>
+
+    <div class="tour-card__controls">
+      <button type="button" (click)="tourStore.prev()" [disabled]="tourStore.isFirstStep()">Back</button>
+
+      @if (tourStore.isLastStep()) {
+        <button type="button" class="tour-card__primary" (click)="tourStore.exit()">Finish</button>
+      } @else {
+        <button type="button" class="tour-card__primary" (click)="tourStore.next()">Next</button>
+      }
+
+      <button type="button" class="tour-card__exit" (click)="tourStore.exit()">Exit tour</button>
+    </div>
+  </div>
+}

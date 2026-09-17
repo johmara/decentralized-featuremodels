@@ -6,6 +6,7 @@
         [style.border-top-color]="'var(' + card.model.scope.colorToken + ')'"
         [class.card--active]="isEditing(card.model.id)"
         [class.card--locked-out]="isLockedOut(card.model.id)"
+        [appTourAnchor]="'card-' + card.model.id"
       >
         <header class="card__header">
           <button
@@ -36,12 +37,12 @@
     }
   </div>
 
-  <section class="canvas__capabilities">
+  <section class="canvas__capabilities" [appTourAnchor]="'capability-lane'">
     <h3>Capabilities</h3>
     <app-capability-lane [example]="example()" [ledger]="ledger()" [missing]="global().missing"></app-capability-lane>
   </section>
 
-  <section class="canvas__resolver">
+  <section class="canvas__resolver" [appTourAnchor]="'resolver-panel'">
     <h3>Global resolver</h3>
     <app-validity-badge [valid]="global().valid" validLabel="Globally valid" invalidLabel="Globally invalid"></app-validity-badge>
     <app-explanation-list

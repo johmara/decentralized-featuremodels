@@ -3,6 +3,7 @@ import { FeatureTree } from '../../ui/feature-tree';
 import { ValidityBadge } from '../../ui/validity-badge';
 import { ExplanationList } from '../../ui/explanation-list';
 import { CapabilityLane } from '../../ui/capability-lane';
+import { TourAnchorDirective } from '../../core/tour/tour-anchor.directive';
 import type { CapabilityLedger } from '../../core/engine/capabilities';
 import type { Explanation } from '../../core/engine/explain';
 import type { ModelPropagation, Propagation } from '../../core/engine/propagate';
@@ -25,7 +26,7 @@ interface ModelCardView {
  */
 @Component({
   selector: 'app-decentralized-view',
-  imports: [FeatureTree, ValidityBadge, ExplanationList, CapabilityLane],
+  imports: [FeatureTree, ValidityBadge, ExplanationList, CapabilityLane, TourAnchorDirective],
   templateUrl: './decentralized-view.html',
   styleUrl: './decentralized-view.scss',
 })
