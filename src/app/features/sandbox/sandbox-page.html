@@ -1,0 +1,161 @@
+<main class="sandbox-page">
+  <header>
+    <h1>Sandbox</h1>
+    <p>
+      Build your own decentralized feature model — add scopes, features, capabilities, and a
+      global rule — then configure it below and watch the resolver. Saved to this browser as you go.
+    </p>
+  </header>
+
+  <div class="sandbox-page__toolbar">
+    <button type="button" (click)="sandbox.undo()" [disabled]="!sandbox.canUndo()">Undo</button>
+    <button type="button" (click)="sandbox.redo()" [disabled]="!sandbox.canRedo()">Redo</button>
+    <button type="button" (click)="onReset()">Reset</button>
+    <button type="button" (click)="downloadJson()">Export JSON</button>
+    <label class="sandbox-page__import">
+      Import JSON
+      <input type="file" accept="application/json" (change)="onImportFile($event)" />
+    </label>
+  </div>
+
+  @if (sandbox.lastError(); as err) {
+    <p class="sandbox-page__error" role="alert">{{ err }}</p>
+  }
+  @if (sandbox.structuralErrors().length > 0) {
+    <details class="sandbox-page__structural-errors">
+      <summary>{{ sandbox.structuralErrors().length }} structural issue(s)</summary>
+      <ul>
+        @for (error of sandbox.structuralErrors(); track error) {
+          <li>{{ error }}</li>
+        }
+      </ul>
+    </details>
+  }
+
+  <section class="sandbox-page__build">
+    <h2>Build</h2>
+
+    <form class="sandbox-form" (submit)="onAddScope($event, scopeId, scopeName, scopeAsset, scopeOwner)">
+      <h3>Add a scope</h3>
+      <input #scopeId placeholder="id, e.g. billing" required />
+      <input #scopeName placeholder="Display name" />
+      <input #scopeAsset placeholder="Asset path, e.g. billing/" />
+      <input #scopeOwner placeholder="Owner label" />
+      <button type="submit">Add scope</button>
+    </form>
+
+    @for (model of example().models; track model.id) {
+      <div class="scope-block">
+        <div class="scope-block__header">
+          <h3>{{ model.name }} <code>{{ model.id }}</code></h3>
+          <button type="button" (click)="sandbox.removeScope(model.id)">Remove scope</button>
+        </div>
+
+        <app-feature-tree [model]="model" [propagation]="structurePropagation(model)" [disabled]="true"></app-feature-tree>
+
+        <form
+          class="sandbox-form"
+          (submit)="onAddFeature($event, model.id, featId, featName, featParent, featKind, featRequires, featProvides)"
+        >
+          <h4>Add a feature</h4>
+          <input #featId placeholder="id" required />
+          <input #featName placeholder="Display name" />
+          <select #featParent>
+            @for (id of model.featureOrder; track id) {
+              <option [value]="id">{{ model.features[id].name }}</option>
+            }
+          </select>
+          <select #featKind>
+            <option value="mandatory">Mandatory</option>
+            <option value="optional">Optional</option>
+            <option value="or">OR group member</option>
+            <option value="xor">XOR group member</option>
+          </select>
+          <select #featRequires multiple [attr.aria-label]="'Requires (' + model.name + ')'">
+            @for (cap of example().capabilities; track cap.id) {
+              <option [value]="cap.id">requires {{ cap.name }}</option>
+            }
+          </select>
+          <select #featProvides multiple [attr.aria-label]="'Provides (' + model.name + ')'">
+            @for (cap of example().capabilities; track cap.id) {
+              <option [value]="cap.id">provides {{ cap.name }}</option>
+            }
+          </select>
+          <button type="submit">Add feature</button>
+        </form>
+
+        <ul class="scope-block__features">
+          @for (id of model.featureOrder; track id) {
+            <li>
+              {{ model.features[id].name }} <span class="scope-block__edge">({{ model.features[id].edge }})</span>
+              @if (id !== model.rootId) {
+                <button type="button" (click)="sandbox.removeFeature(model.id, id)">Remove</button>
+              }
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </section>
+
+  <section class="sandbox-page__capabilities">
+    <h2>Capabilities</h2>
+    <form class="sandbox-form" (submit)="onAddCapability($event, capId, capName, capDesc)">
+      <input #capId placeholder="id" required />
+      <input #capName placeholder="Display name" />
+      <input #capDesc placeholder="Description" />
+      <button type="submit">Add capability</button>
+    </form>
+    <ul class="sandbox-page__pill-list">
+      @for (cap of example().capabilities; track cap.id) {
+        <li>{{ cap.name }} <button type="button" (click)="sandbox.removeCapability(cap.id)">Remove</button></li>
+      }
+    </ul>
+  </section>
+
+  <section class="sandbox-page__rules">
+    <h2>Global rules</h2>
+    <form class="sandbox-form" (submit)="onAddRule($event, ruleA, ruleB, ruleWhy)">
+      <select #ruleA [attr.aria-label]="'First capability'">
+        @for (cap of example().capabilities; track cap.id) {
+          <option [value]="cap.id">{{ cap.name }}</option>
+        }
+      </select>
+      <span aria-hidden="true">cannot coexist with</span>
+      <select #ruleB [attr.aria-label]="'Second capability'">
+        @for (cap of example().capabilities; track cap.id) {
+          <option [value]="cap.id">{{ cap.name }}</option>
+        }
+      </select>
+      <input #ruleWhy placeholder="Why not?" />
+      <button type="submit">Add mutex rule</button>
+    </form>
+    <ul class="sandbox-page__pill-list">
+      @for (rule of example().globalRules; track $index) {
+        <li>
+          {{ rule.a }} &ne; {{ rule.b }}
+          <button type="button" (click)="sandbox.removeGlobalRule($index)">Remove</button>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section class="sandbox-page__configure">
+    <h2>Configure &amp; resolve</h2>
+    @if (example().models.length === 0) {
+      <p>Add at least one scope above to start configuring.</p>
+    } @else {
+      <app-decentralized-view
+        [example]="example()"
+        [propagation]="propagation()"
+        [localResults]="localResults()"
+        [ledger]="ledger()"
+        [global]="global()"
+        [globalExplanations]="globalExplanations()"
+        [activeScope]="activeScope()"
+        (toggle)="onToggle($event)"
+        (scopeSelect)="onScopeSelect($event)"
+      ></app-decentralized-view>
+    }
+  </section>
+</main>

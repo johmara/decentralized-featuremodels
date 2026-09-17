@@ -19,6 +19,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/compare/compare-page').then((m) => m.ComparePage),
   },
   {
+    path: 'sandbox',
+    loadComponent: () => import('./features/sandbox/sandbox-page').then((m) => m.SandboxPage),
+  },
+  {
     path: '**',
     loadComponent: () => import('./features/not-found/not-found-page').then((m) => m.NotFoundPage),
   },

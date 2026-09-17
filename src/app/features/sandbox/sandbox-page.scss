@@ -1,0 +1,161 @@
+.sandbox-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.sandbox-page header p {
+  color: var(--text-muted);
+  max-width: 640px;
+  line-height: 1.5;
+}
+
+.sandbox-page__toolbar {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sandbox-page__toolbar button,
+.sandbox-page__import {
+  border: 1.5px solid var(--border);
+  background: var(--surface-raised);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.sandbox-page__toolbar button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sandbox-page__error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.sandbox-page__structural-errors {
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+.sandbox-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin: var(--space-2) 0;
+}
+
+.sandbox-form h3,
+.sandbox-form h4 {
+  flex: 1 0 100%;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.sandbox-form input,
+.sandbox-form select {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.sandbox-form select[multiple] {
+  min-width: 140px;
+  height: 4.5em;
+}
+
+.sandbox-form button {
+  border: 1.5px solid var(--accent);
+  background: var(--accent);
+  color: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.scope-block {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.scope-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.scope-block__header code {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.scope-block__features {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: 0.82rem;
+}
+
+.scope-block__features li {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px var(--space-2);
+}
+
+.scope-block__edge {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.sandbox-page__pill-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+}
+
+.sandbox-page__pill-list li {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.sandbox-page__pill-list button,
+.scope-block__features button {
+  border: none;
+  background: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 0.8rem;
+  text-decoration: underline;
+}
