@@ -64,58 +64,56 @@ const CAPABILITIES: readonly Capability[] = [
 // Product: Shipment
 // ---------------------------------------------------------------------------
 
-function frontendShipmentEntryModel(): FeatureModel {
+function frontendShipmentPortalModel(): FeatureModel {
   const features: Record<string, Feature> = {
-    ShipmentEntryFacade: feature({
-      id: 'ShipmentEntryFacade',
-      name: 'Shipment Entry Facade',
+    ShipmentPortal: feature({
+      id: 'ShipmentPortal',
+      name: 'Shipment Portal',
       parentId: null,
       edge: 'mandatory',
-      childIds: ['DarkTheme'],
       requires: ['ShipmentCreation'],
     }),
-    DarkTheme: feature({ id: 'DarkTheme', name: 'Dark Theme', parentId: 'ShipmentEntryFacade', edge: 'optional' }),
   };
   return {
-    id: 'enterprise.frontend.shipment-entry',
-    name: 'Shipment Entry Frontend Facade',
-    rootId: 'ShipmentEntryFacade',
+    id: 'enterprise.frontend.shipment-portal',
+    name: 'Shipment Portal',
+    rootId: 'ShipmentPortal',
     features,
     groups: {},
     constraints: [],
     scope: {
-      assetPath: 'platform/shipment/frontend-shipment-entry/',
+      assetPath: 'platform/shipment/shipment-portal/',
       assetKind: 'repo',
-      modelFileName: 'frontend-shipment-entry.fm',
-      ownerLabel: 'Shipment Entry Frontend Facade scope',
+      modelFileName: 'shipment-portal.fm',
+      ownerLabel: 'Shipment Portal scope',
       colorToken: '--team-messaging',
     },
     featureOrder: Object.keys(features),
   };
 }
 
-function frontendTrackingModel(): FeatureModel {
+function frontendTrackingPortalModel(): FeatureModel {
   const features: Record<string, Feature> = {
-    TrackingFacade: feature({
-      id: 'TrackingFacade',
-      name: 'Tracking Facade',
+    TrackingPortal: feature({
+      id: 'TrackingPortal',
+      name: 'Tracking Portal',
       parentId: null,
       edge: 'mandatory',
       requires: ['ShipmentTracking'],
     }),
   };
   return {
-    id: 'enterprise.frontend.tracking',
-    name: 'Tracking Frontend Facade',
-    rootId: 'TrackingFacade',
+    id: 'enterprise.frontend.tracking-portal',
+    name: 'Tracking Portal',
+    rootId: 'TrackingPortal',
     features,
     groups: {},
     constraints: [],
     scope: {
-      assetPath: 'platform/shipment/frontend-tracking/',
+      assetPath: 'platform/shipment/tracking-portal/',
       assetKind: 'repo',
-      modelFileName: 'frontend-tracking.fm',
-      ownerLabel: 'Tracking Frontend Facade scope',
+      modelFileName: 'tracking-portal.fm',
+      ownerLabel: 'Tracking Portal scope',
       colorToken: '--team-connectivity',
     },
     featureOrder: Object.keys(features),
@@ -321,61 +319,30 @@ function microApiTrackingNumbersModel(): FeatureModel {
 // Product: Finance
 // ---------------------------------------------------------------------------
 
-function frontendInvoiceAuditModel(): FeatureModel {
+function frontendInvoicePortalModel(): FeatureModel {
   const features: Record<string, Feature> = {
-    InvoiceAuditFacade: feature({
-      id: 'InvoiceAuditFacade',
-      name: 'Invoice Audit Facade',
+    InvoicePortal: feature({
+      id: 'InvoicePortal',
+      name: 'Invoice Portal',
       parentId: null,
       edge: 'mandatory',
       requires: ['InvoiceAudit'],
-      note: 'Satisfied directly by the Finance Module API, not by the Finance API Facade in between — capabilities do not care how many layers separate a requirer from its provider.',
+      note: 'The Finance product has no API facade layer at all — Invoice Portal requires InvoiceAudit directly from the Finance Module API. Capabilities do not care how many layers separate a requirer from its provider, including zero.',
     }),
   };
   return {
-    id: 'enterprise.frontend.invoice-audit',
-    name: 'Invoice Audit Frontend Facade',
-    rootId: 'InvoiceAuditFacade',
+    id: 'enterprise.frontend.invoice-portal',
+    name: 'Invoice Portal',
+    rootId: 'InvoicePortal',
     features,
     groups: {},
     constraints: [],
     scope: {
-      assetPath: 'platform/finance/frontend-invoice-audit/',
+      assetPath: 'platform/finance/invoice-portal/',
       assetKind: 'repo',
-      modelFileName: 'frontend-invoice-audit.fm',
-      ownerLabel: 'Invoice Audit Frontend Facade scope',
+      modelFileName: 'invoice-portal.fm',
+      ownerLabel: 'Invoice Portal scope',
       colorToken: '--team-connectivity',
-    },
-    featureOrder: Object.keys(features),
-  };
-}
-
-function apiFacadeFinanceModel(): FeatureModel {
-  const features: Record<string, Feature> = {
-    FinanceApiFacade: feature({
-      id: 'FinanceApiFacade',
-      name: 'Finance API Facade',
-      parentId: null,
-      edge: 'mandatory',
-      childIds: ['AuditLogging'],
-      requires: ['InvoiceAudit', 'BillingProposal'],
-      note: 'A pure consumer here — it needs Invoice Audit and Billing Proposal to build its responses, but does not re-provide them upward. The frontend facade above is satisfied directly by the Finance Module API instead.',
-    }),
-    AuditLogging: feature({ id: 'AuditLogging', name: 'Audit Logging', parentId: 'FinanceApiFacade', edge: 'optional' }),
-  };
-  return {
-    id: 'enterprise.api-facade.finance',
-    name: 'Finance API Facade',
-    rootId: 'FinanceApiFacade',
-    features,
-    groups: {},
-    constraints: [],
-    scope: {
-      assetPath: 'platform/finance/api-facade-finance/',
-      assetKind: 'repo',
-      modelFileName: 'api-facade-finance.fm',
-      ownerLabel: 'Finance API Facade scope',
-      colorToken: '--team-keyboard',
     },
     featureOrder: Object.keys(features),
   };
@@ -421,8 +388,8 @@ const ASSET_TREE: AssetNode = {
       path: 'platform/shipment/',
       kind: 'folder',
       children: [
-        { path: 'platform/shipment/frontend-shipment-entry/', kind: 'repo', children: [], modelId: 'enterprise.frontend.shipment-entry' },
-        { path: 'platform/shipment/frontend-tracking/', kind: 'repo', children: [], modelId: 'enterprise.frontend.tracking' },
+        { path: 'platform/shipment/shipment-portal/', kind: 'repo', children: [], modelId: 'enterprise.frontend.shipment-portal' },
+        { path: 'platform/shipment/tracking-portal/', kind: 'repo', children: [], modelId: 'enterprise.frontend.tracking-portal' },
         { path: 'platform/shipment/api-facade-default/', kind: 'repo', children: [], modelId: 'enterprise.api-facade.default' },
         { path: 'platform/shipment/api-facade-partner-a/', kind: 'repo', children: [], modelId: 'enterprise.api-facade.partner-a' },
         { path: 'platform/shipment/module-api-execution/', kind: 'repo', children: [], modelId: 'enterprise.module-api.execution' },
@@ -442,8 +409,7 @@ const ASSET_TREE: AssetNode = {
       path: 'platform/finance/',
       kind: 'folder',
       children: [
-        { path: 'platform/finance/frontend-invoice-audit/', kind: 'repo', children: [], modelId: 'enterprise.frontend.invoice-audit' },
-        { path: 'platform/finance/api-facade-finance/', kind: 'repo', children: [], modelId: 'enterprise.api-facade.finance' },
+        { path: 'platform/finance/invoice-portal/', kind: 'repo', children: [], modelId: 'enterprise.frontend.invoice-portal' },
         { path: 'platform/finance/module-api-finance/', kind: 'repo', children: [], modelId: 'enterprise.module-api.finance' },
       ],
     },
@@ -455,14 +421,13 @@ const PRESETS: readonly ConfigPreset[] = [
     id: 'everything-wired',
     title: 'Everything wired',
     description:
-      'Twelve independently owned repos across two product lines. Every required capability has a provider — Routing even has two, from two entirely separate Micro API repos.',
+      'Eleven independently owned repos across two product lines — one of them (Finance) has no API facade layer at all. Every required capability has a provider — Carrier Routing even has two, from two entirely separate Micro API repos.',
     selection: {
-      'enterprise.frontend.shipment-entry': [],
-      'enterprise.frontend.tracking': [],
-      'enterprise.frontend.invoice-audit': [],
+      'enterprise.frontend.shipment-portal': [],
+      'enterprise.frontend.tracking-portal': [],
+      'enterprise.frontend.invoice-portal': [],
       'enterprise.api-facade.default': ['BearerToken'],
       'enterprise.api-facade.partner-a': [],
-      'enterprise.api-facade.finance': [],
       'enterprise.module-api.execution': [],
       'enterprise.module-api.finance': [],
       'enterprise.micro-api.routing-v2': [],
@@ -477,12 +442,11 @@ const PRESETS: readonly ConfigPreset[] = [
     description:
       'The Validation v1 repo exists but its capability is toggled off. The resolver notifies only that one repo — not the Execution Module API that needed it, and not any other Micro API.',
     selection: {
-      'enterprise.frontend.shipment-entry': [],
-      'enterprise.frontend.tracking': [],
-      'enterprise.frontend.invoice-audit': [],
+      'enterprise.frontend.shipment-portal': [],
+      'enterprise.frontend.tracking-portal': [],
+      'enterprise.frontend.invoice-portal': [],
       'enterprise.api-facade.default': ['BearerToken'],
       'enterprise.api-facade.partner-a': [],
-      'enterprise.api-facade.finance': [],
       'enterprise.module-api.execution': [],
       'enterprise.module-api.finance': [],
       'enterprise.micro-api.routing-v2': [],
@@ -499,8 +463,8 @@ export const ENTERPRISE_EXAMPLE: Example = {
   blurb:
     'A synthetic layered service platform, divided into product lines — every facade, module API, and micro API is its own repo, and capabilities, not APIs, are what actually connect them.',
   models: [
-    frontendShipmentEntryModel(),
-    frontendTrackingModel(),
+    frontendShipmentPortalModel(),
+    frontendTrackingPortalModel(),
     apiFacadeDefaultModel(),
     apiFacadePartnerAModel(),
     moduleApiExecutionModel(),
@@ -508,8 +472,7 @@ export const ENTERPRISE_EXAMPLE: Example = {
     microApiRoutingModel('v3'),
     microApiValidationModel(),
     microApiTrackingNumbersModel(),
-    frontendInvoiceAuditModel(),
-    apiFacadeFinanceModel(),
+    frontendInvoicePortalModel(),
     moduleApiFinanceModel(),
   ],
   capabilities: CAPABILITIES,

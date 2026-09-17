@@ -34,7 +34,7 @@ export const REQUIREMENTS: readonly RequirementItem[] = [
     title: 'Decentralized configuration',
     detail: 'A valid global configuration must be reachable by combining independently-made local decisions, not by editing one shared file.',
     demoLink: '/explore/enterprise?mode=decentralized&preset=everything-wired',
-    demoLabel: 'Twelve repos, two product lines, each configured alone, resolve together',
+    demoLabel: 'Eleven repos, two product lines, each configured alone, resolve together',
   },
   {
     id: 'R5',

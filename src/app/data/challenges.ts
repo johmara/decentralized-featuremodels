@@ -39,7 +39,7 @@ export const CHALLENGES: readonly ChallengeItem[] = [
     detail: 'Too few models and independence disappears; too many and the capability graph between them becomes its own maintenance burden.',
     relatesTo: 'R2',
     demoLink: '/explore/enterprise?mode=decentralized',
-    demoLabel: 'Twelve small repos here — the tradeoff made concrete',
+    demoLabel: 'Eleven small repos here — the tradeoff made concrete',
   },
   {
     id: 'C5',
