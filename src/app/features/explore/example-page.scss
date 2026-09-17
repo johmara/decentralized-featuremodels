@@ -7,6 +7,25 @@
   gap: var(--space-4);
 }
 
+.example-page__switcher {
+  display: flex;
+  gap: var(--space-3);
+  font-size: 0.85rem;
+}
+
+.example-page__switcher a {
+  text-decoration: none;
+  color: var(--text-muted);
+  padding-bottom: 2px;
+  border-bottom: 2px solid transparent;
+}
+
+.example-page__switcher a.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
 .example-page__header h1 {
   margin: 0 0 var(--space-1);
 }

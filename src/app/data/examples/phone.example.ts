@@ -21,6 +21,7 @@ import type {
   FeatureModel,
   GlobalRule,
 } from '../../core/model/feature-model.types';
+import { feature } from './feature-helpers';
 
 const CAPABILITIES: readonly Capability[] = [
   {
@@ -63,10 +64,6 @@ const GLOBAL_RULES: readonly GlobalRule[] = [
 // ---------------------------------------------------------------------------
 // Centralized model — Fig. 1
 // ---------------------------------------------------------------------------
-
-function feature(partial: Partial<Feature> & Pick<Feature, 'id' | 'name' | 'parentId' | 'edge'>): Feature {
-  return { childIds: [], ...partial };
-}
 
 function centralizedModel(): FeatureModel {
   const features: Record<string, Feature> = {

@@ -1,23 +1,27 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FeatureTree } from '../../ui/feature-tree';
 import { Legend } from '../../ui/legend';
 import { DecentralizedView } from './decentralized-view';
 import { ConfigStore, type Mode } from '../../core/state/config.store';
 import { decodeSelection, encodeSelection } from '../../core/url/config-codec';
 import { explainMissingCapability, explainRuleViolation } from '../../core/engine/resolver';
+import { EXAMPLES, EXAMPLE_IDS } from '../../data/examples';
 import type { Explanation } from '../../core/engine/explain';
 import type { ModelPropagation } from '../../core/engine/propagate';
 import type { FeatureRef, ModelId } from '../../core/model/feature-model.types';
 
 @Component({
   selector: 'app-example-page',
-  imports: [FeatureTree, Legend, DecentralizedView],
+  imports: [FeatureTree, Legend, DecentralizedView, RouterLink],
   templateUrl: './example-page.html',
   styleUrl: './example-page.scss',
 })
 export class ExamplePage {
   readonly exampleId = input<string>('phone');
+
+  protected readonly exampleIds = EXAMPLE_IDS;
+  protected readonly exampleTitle = (id: string): string => EXAMPLES[id]?.title ?? id;
 
   protected readonly store = inject(ConfigStore);
   private readonly route = inject(ActivatedRoute);

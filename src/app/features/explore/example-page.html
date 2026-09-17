@@ -1,4 +1,10 @@
 <main class="example-page">
+  <nav class="example-page__switcher" aria-label="Examples">
+    @for (id of exampleIds; track id) {
+      <a [routerLink]="['/explore', id]" [class.active]="exampleId() === id">{{ exampleTitle(id) }}</a>
+    }
+  </nav>
+
   <header class="example-page__header">
     <h1>{{ store.example().title }}</h1>
     <p>{{ store.example().blurb }}</p>
