@@ -1,4 +1,4 @@
-import type { Example, FeatureModel, ModelId } from '../model/feature-model.types';
+import { ruleCapabilities, type Example, type FeatureModel, type ModelId } from '../model/feature-model.types';
 
 /**
  * Structural data invariants for an {@link Example} — dangling references,
@@ -31,9 +31,8 @@ export function validateExample(example: Example): string[] {
   }
 
   for (const rule of example.globalRules) {
-    if (rule.kind === 'capability-mutex') {
-      if (!capabilityIds.has(rule.a)) errors.push(`Global rule references unknown capability "${rule.a}"`);
-      if (!capabilityIds.has(rule.b)) errors.push(`Global rule references unknown capability "${rule.b}"`);
+    for (const capabilityId of ruleCapabilities(rule)) {
+      if (!capabilityIds.has(capabilityId)) errors.push(`Global rule references unknown capability "${capabilityId}"`);
     }
   }
 

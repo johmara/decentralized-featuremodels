@@ -45,8 +45,7 @@ describe('resolveGlobal', () => {
     expect(result.valid).toBe(false);
     expect(result.missing).toEqual([]);
     expect(result.ruleViolations).toHaveLength(1);
-    expect(result.ruleViolations[0].rule.a).toBe('SecureStorage');
-    expect(result.ruleViolations[0].rule.b).toBe('InsecureStorage');
+    expect(result.ruleViolations[0].rule).toMatchObject({ kind: 'capability-mutex', a: 'SecureStorage', b: 'InsecureStorage' });
   });
 
   it('diagnoses a capability with zero providers anywhere as unprovidable', () => {

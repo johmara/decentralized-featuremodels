@@ -5,6 +5,7 @@ import type {
   Feature,
   FeatureId,
   FeatureModel,
+  GlobalRule,
   GroupId,
   ModelId,
 } from '../model/feature-model.types';
@@ -199,8 +200,18 @@ export function removeCapability(example: Example, capabilityId: CapabilityId): 
 }
 
 export function addMutexRule(example: Example, a: CapabilityId, b: CapabilityId, rationale: string): Example {
-  if (a === b) throw new SandboxEditError('A capability cannot be mutually exclusive with itself.');
-  return { ...example, globalRules: [...example.globalRules, { kind: 'capability-mutex', a, b, rationale }] };
+  return addGlobalRule(example, { kind: 'capability-mutex', a, b, rationale });
+}
+
+export function addGlobalRule(example: Example, rule: GlobalRule): Example {
+  if (rule.kind !== 'capability-single-provider' && rule.a === rule.b) {
+    throw new SandboxEditError(
+      rule.kind === 'capability-mutex'
+        ? 'A capability cannot be mutually exclusive with itself.'
+        : 'A capability trivially implies itself — pick two different capabilities.',
+    );
+  }
+  return { ...example, globalRules: [...example.globalRules, rule] };
 }
 
 export function removeGlobalRule(example: Example, index: number): Example {

@@ -168,25 +168,54 @@
 
   <section class="sandbox-page__rules">
     <h2>Global rules</h2>
-    <form class="sandbox-form sandbox-form--inline" (submit)="onAddRule($event, ruleA, ruleB, ruleWhy)">
-      <select #ruleA [attr.aria-label]="'First capability'">
+    <p class="sandbox-page__hint">
+      Direct constraints across scopes (the paper's C<sub>interactions</sub>). Use them as a last resort — prefer
+      requires/provides, which keep scopes independent.
+    </p>
+    <form class="sandbox-form sandbox-form--inline" (submit)="onAddRule($event, ruleKindSelect, ruleA, ruleB, ruleWhy)">
+      <select #ruleA aria-label="Capability">
         @for (cap of example().capabilities; track cap.id) {
           <option [value]="cap.id">{{ cap.name }}</option>
         }
       </select>
-      <span aria-hidden="true">cannot coexist with</span>
-      <select #ruleB [attr.aria-label]="'Second capability'">
+      <select #ruleKindSelect aria-label="Rule kind" (change)="ruleKind.set($any($event.target).value)">
+        @for (kind of ruleKinds; track kind.value) {
+          <option [value]="kind.value" [selected]="kind.value === ruleKind()">{{ kind.label }}</option>
+        }
+      </select>
+      <select #ruleB aria-label="Second capability" [hidden]="ruleKind() === 'capability-single-provider'">
         @for (cap of example().capabilities; track cap.id) {
           <option [value]="cap.id">{{ cap.name }}</option>
         }
       </select>
-      <input #ruleWhy placeholder="Why not?" />
-      <button type="submit">Add mutex rule</button>
+      <input #ruleWhy placeholder="Why? (rationale)" aria-label="Rationale" />
+      <button type="submit" [disabled]="pendingRule() !== null">Add rule…</button>
     </form>
+
+    @if (pendingRule(); as rule) {
+      <div class="rule-warning" role="alertdialog" aria-labelledby="rule-warning-title">
+        <p id="rule-warning-title"><strong>Are you sure you need this global rule?</strong></p>
+        <p>
+          <code>{{ ruleNotation(rule) }}</code> — {{ describeRule(rule) }} This couples scopes directly. No single scope owner can
+          fix a violation alone, and every scope involved must now coordinate on it.
+          Is there really no other way to express this interaction?
+        </p>
+        <ul>
+          @for (alternative of alternativesFor(rule); track alternative) {
+            <li>{{ alternative }}</li>
+          }
+        </ul>
+        <div class="rule-warning__actions">
+          <button type="button" class="primary-button" (click)="confirmPendingRule()">Yes, there is no other way — add it</button>
+          <button type="button" class="link-button" (click)="pendingRule.set(null)">Cancel</button>
+        </div>
+      </div>
+    }
+
     <ul class="sandbox-page__pill-list">
       @for (rule of example().globalRules; track $index) {
-        <li>
-          {{ rule.a }} &ne; {{ rule.b }}
+        <li [title]="describeRule(rule) + ' ' + rule.rationale">
+          <code>{{ ruleNotation(rule) }}</code>
           <button type="button" (click)="sandbox.removeGlobalRule($index)">Remove</button>
         </li>
       }

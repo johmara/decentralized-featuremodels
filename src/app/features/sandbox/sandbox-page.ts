@@ -2,13 +2,13 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { DecentralizedView } from '../explore/decentralized-view';
 import { SandboxStore } from '../../core/state/sandbox.store';
 import { aggregate } from '../../core/engine/capabilities';
-import { explainMissingCapability, explainRuleViolation, resolveGlobal } from '../../core/engine/resolver';
+import { describeGlobalRule, globalRuleNotation, explainMissingCapability, explainRuleViolation, resolveGlobal } from '../../core/engine/resolver';
 import { checkAllLocal } from '../../core/engine/validity';
 import { propagateAll } from '../../core/engine/propagate';
 import type { Explanation } from '../../core/engine/explain';
 import { featureKindOf, suggestCapabilityId, suggestFeatureId, suggestScopeId, type FeatureKind } from '../../core/engine/sandbox-edit';
 import { EXAMPLES, EXAMPLE_IDS } from '../../data/examples';
-import type { CapabilityId, Example, Feature, FeatureId, FeatureModel, FeatureRef, ModelId, Selection } from '../../core/model/feature-model.types';
+import type { CapabilityId, Example, Feature, FeatureId, GlobalRule, GlobalRuleKind, FeatureModel, FeatureRef, ModelId, Selection } from '../../core/model/feature-model.types';
 
 const COLOR_TOKENS = ['--team-messaging', '--team-connectivity', '--team-keyboard', '--team-storage', '--surface-muted'];
 
@@ -34,6 +34,15 @@ export class SandboxPage {
     { value: 'xor', label: 'XOR group' },
   ];
   protected readonly directions = ['requires', 'provides'] as const;
+
+  protected readonly ruleKinds: readonly { value: GlobalRuleKind; label: string }[] = [
+    { value: 'capability-mutex', label: 'cannot coexist with' },
+    { value: 'capability-implies', label: 'if provided, also needs' },
+    { value: 'capability-single-provider', label: 'has at most one provider' },
+  ];
+  protected readonly ruleKind = signal<GlobalRuleKind>('capability-mutex');
+  /** A rule the user has filled in but not yet confirmed past the "are you sure" warning. */
+  protected readonly pendingRule = signal<GlobalRule | null>(null);
 
   /** The feature open in the inspector, if any. */
   protected readonly selected = signal<FeatureRef | null>(null);
@@ -185,11 +194,55 @@ export class SandboxPage {
     this.excludedModelIds.set(new Set());
   }
 
-  onAddRule(event: Event, aSelect: HTMLSelectElement, bSelect: HTMLSelectElement, whyInput: HTMLInputElement): void {
+  /** Builds the rule from the form, but only stages it — the user must confirm past the warning first. */
+  onAddRule(event: Event, kindSelect: HTMLSelectElement, aSelect: HTMLSelectElement, bSelect: HTMLSelectElement, whyInput: HTMLInputElement): void {
     event.preventDefault();
-    if (!aSelect.value || !bSelect.value) return;
-    this.sandbox.addMutexRule(aSelect.value, bSelect.value, whyInput.value.trim() || 'These cannot both be provided.');
+    const kind = kindSelect.value as GlobalRuleKind;
+    const rationale = whyInput.value.trim();
+    if (!aSelect.value) return;
+    if (kind === 'capability-single-provider') {
+      this.pendingRule.set({ kind, capability: aSelect.value, rationale: rationale || 'Only one provider is allowed.' });
+    } else {
+      if (!bSelect.value) return;
+      this.pendingRule.set({ kind, a: aSelect.value, b: bSelect.value, rationale: rationale || 'Required across scopes.' });
+    }
     whyInput.value = '';
+  }
+
+  confirmPendingRule(): void {
+    const rule = this.pendingRule();
+    if (!rule) return;
+    this.sandbox.addGlobalRule(rule);
+    this.pendingRule.set(null);
+  }
+
+  ruleNotation(rule: GlobalRule): string {
+    return globalRuleNotation(rule);
+  }
+
+  describeRule(rule: GlobalRule): string {
+    return describeGlobalRule(this.example(), rule);
+  }
+
+  /** The capability-only alternatives worth trying before a global rule — the paper's "rare, unavoidable" bar. */
+  alternativesFor(rule: GlobalRule): readonly string[] {
+    const name = (id: string) => this.example().capabilities.find((c) => c.id === id)?.name ?? id;
+    switch (rule.kind) {
+      case 'capability-mutex':
+        return [
+          `If one scope owns both "${name(rule.a)}" and "${name(rule.b)}", make them an XOR group there — a local constraint.`,
+          `If both are variants of the same ability, model one capability with alternative providers instead of two that exclude each other.`,
+        ];
+      case 'capability-implies':
+        return [
+          `Let the features that provide "${name(rule.a)}" also require "${name(rule.b)}". That is an ordinary capability requirement, owned by the provider's scope.`,
+        ];
+      case 'capability-single-provider':
+        return [
+          `If the providers are in one scope, put them in an XOR group there.`,
+          `If consumers really need one specific provider, give that provider a more specific capability and require that instead.`,
+        ];
+    }
   }
 
   onReset(): void {

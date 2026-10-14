@@ -35,7 +35,7 @@ export interface GlobalResult {
   readonly ledger: CapabilityLedger;
   readonly missing: readonly MissingCapability[];
   readonly ruleViolations: readonly RuleViolation[];
-  /** Valid_global = ⋀ᵢ Valid(FMᵢ) ∧ ⋀_{c∈Req} Provided(c) ∧ C_capabilities */
+  /** Valid_global = ⋀ᵢ Valid(FMᵢ) ∧ ⋀_{c∈Req} Provided(c) ∧ C_interactions */
   readonly valid: boolean;
 }
 
@@ -62,19 +62,33 @@ export function resolveGlobal(example: Example, selection: Selection): GlobalRes
 
   const ruleViolations: RuleViolation[] = [];
   for (const rule of example.globalRules) {
-    if (rule.kind === 'capability-mutex') {
-      const aProviders = ledger.provided.get(rule.a) ?? [];
-      const bProviders = ledger.provided.get(rule.b) ?? [];
-      if (aProviders.length > 0 && bProviders.length > 0) {
-        ruleViolations.push({ rule, involvedProviders: [...aProviders, ...bProviders] });
-      }
-    }
+    const violation = checkRule(rule, ledger);
+    if (violation) ruleViolations.push(violation);
   }
 
   const allLocalValid = [...localResults.values()].every((result) => result.valid);
   const valid = allLocalValid && missing.length === 0 && ruleViolations.length === 0;
 
   return { localResults, ledger, missing, ruleViolations, valid };
+}
+
+function checkRule(rule: GlobalRule, ledger: CapabilityLedger): RuleViolation | null {
+  const providersOf = (id: CapabilityId) => ledger.provided.get(id) ?? [];
+  switch (rule.kind) {
+    case 'capability-mutex': {
+      const a = providersOf(rule.a);
+      const b = providersOf(rule.b);
+      return a.length > 0 && b.length > 0 ? { rule, involvedProviders: [...a, ...b] } : null;
+    }
+    case 'capability-implies': {
+      const a = providersOf(rule.a);
+      return a.length > 0 && providersOf(rule.b).length === 0 ? { rule, involvedProviders: a } : null;
+    }
+    case 'capability-single-provider': {
+      const providers = providersOf(rule.capability);
+      return providers.length > 1 ? { rule, involvedProviders: providers } : null;
+    }
+  }
 }
 
 function capabilityName(example: Example, id: CapabilityId): string {
@@ -102,10 +116,35 @@ export function explainMissingCapability(example: Example, missing: MissingCapab
   });
 }
 
+/** Compact notation over capability ids: `A ≠ B`, `A ⇒ B`, `C ≤ 1 provider`. */
+export function globalRuleNotation(rule: GlobalRule): string {
+  switch (rule.kind) {
+    case 'capability-mutex':
+      return `${rule.a} ≠ ${rule.b}`;
+    case 'capability-implies':
+      return `${rule.a} ⇒ ${rule.b}`;
+    case 'capability-single-provider':
+      return `${rule.capability} ≤ 1 provider`;
+  }
+}
+
+/** One-line, human-readable statement of what a rule demands. */
+export function describeGlobalRule(example: Example, rule: GlobalRule): string {
+  const name = (id: CapabilityId) => `"${capabilityName(example, id)}"`;
+  switch (rule.kind) {
+    case 'capability-mutex':
+      return `${name(rule.a)} cannot coexist with ${name(rule.b)}.`;
+    case 'capability-implies':
+      return `If ${name(rule.a)} is provided, ${name(rule.b)} must be provided too.`;
+    case 'capability-single-provider':
+      return `At most one feature may provide ${name(rule.capability)}.`;
+  }
+}
+
 export function explainRuleViolation(example: Example, violation: RuleViolation): Explanation {
   return explain({
     code: 'E_GLOBAL_RULE_VIOLATED',
-    detail: `"${capabilityName(example, violation.rule.a)}" and "${capabilityName(example, violation.rule.b)}" cannot both be provided. ${violation.rule.rationale}`,
+    detail: `${describeGlobalRule(example, violation.rule)} ${violation.rule.rationale}`,
     involves: violation.involvedProviders,
   });
 }

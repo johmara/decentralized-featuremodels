@@ -25,11 +25,9 @@ const SYNTHETIC_SCOPE: Scope = {
  * Flattens a decentralized {@link Example} into the monolithic equivalent a
  * traditional single-model technique would need to maintain: one synthetic
  * root over every model's subtree, each `Requires(c)` expanded into the
- * provider disjunction `c ⇒ (p₁ ∨ … ∨ pₖ)`, and each capability-mutex rule
- * expanded into a plain `excludes` between two concrete features (when the
- * mutex names exactly one provider per side — otherwise left as a
- * `requiresAny`-shaped note, since a true global mutex over sets of
- * providers has no single pairwise encoding).
+ * provider disjunction `c ⇒ (p₁ ∨ … ∨ pₖ)`, and each global rule expanded
+ * into plain `excludes` / `requiresAny` constraints between concrete
+ * provider features.
  *
  * This function has two jobs: it powers the "what would the monolith look
  * like" comparison view, and — because {@link enumerateLocal} +
@@ -121,24 +119,30 @@ export function centralize(example: Example): FeatureModel {
     }
   }
 
-  // Capability mutex rules with exactly one provider per side collapse to a
-  // plain excludes edge. Rules with multiple providers per side have no
-  // single pairwise encoding and are intentionally omitted here — they are
-  // exactly the case the comparison view uses to show where flattening
-  // stops being straightforward.
-  let mutexCounter = 0;
+  // Every rule kind has an exact encoding:
+  // - mutex: every provider of `a` excludes every provider of `b`;
+  // - implies: every provider of `a` requires some provider of `b`;
+  // - single-provider: its providers pairwise exclude each other.
+  let ruleCounter = 0;
   for (const rule of example.globalRules) {
-    if (rule.kind !== 'capability-mutex') continue;
-    const aProviders = providersByCapability.get(rule.a) ?? [];
-    const bProviders = providersByCapability.get(rule.b) ?? [];
-    if (aProviders.length === 1 && bProviders.length === 1) {
-      constraints.push({
-        id: `__mutex_${mutexCounter++}`,
-        kind: 'excludes',
-        source: aProviders[0],
-        target: bProviders[0],
-        rationale: rule.rationale,
-      });
+    if (rule.kind === 'capability-mutex') {
+      for (const source of providersByCapability.get(rule.a) ?? []) {
+        for (const target of providersByCapability.get(rule.b) ?? []) {
+          constraints.push({ id: `__mutex_${ruleCounter++}`, kind: 'excludes', source, target, rationale: rule.rationale });
+        }
+      }
+    } else if (rule.kind === 'capability-implies') {
+      const bProviders = providersByCapability.get(rule.b) ?? [];
+      for (const source of providersByCapability.get(rule.a) ?? []) {
+        constraints.push({ id: `__implies_${ruleCounter++}`, kind: 'requiresAny', source, targets: bProviders, rationale: rule.rationale });
+      }
+    } else {
+      const providers = providersByCapability.get(rule.capability) ?? [];
+      for (let i = 0; i < providers.length; i++) {
+        for (let j = i + 1; j < providers.length; j++) {
+          constraints.push({ id: `__single_${ruleCounter++}`, kind: 'excludes', source: providers[i], target: providers[j], rationale: rule.rationale });
+        }
+      }
     }
   }
 

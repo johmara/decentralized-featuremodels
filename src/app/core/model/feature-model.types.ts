@@ -111,13 +111,27 @@ export interface Capability {
   readonly vocabularyNote?: string;
 }
 
-/** A rule that crosses model boundaries but is not itself a capability requirement. */
-export type GlobalRule = {
-  readonly kind: 'capability-mutex';
-  readonly a: CapabilityId;
-  readonly b: CapabilityId;
-  readonly rationale: string;
-};
+/**
+ * A rule that crosses model boundaries but is not itself a capability
+ * requirement — the paper's C_interactions. Every kind is phrased over
+ * capabilities, never over another scope's features, so scopes stay
+ * decoupled even here.
+ *
+ * - `capability-mutex`: `a` and `b` are never both provided.
+ * - `capability-implies`: whenever `a` is provided, `b` must be provided too.
+ * - `capability-single-provider`: at most one selected feature provides `capability`.
+ */
+export type GlobalRule =
+  | { readonly kind: 'capability-mutex'; readonly a: CapabilityId; readonly b: CapabilityId; readonly rationale: string }
+  | { readonly kind: 'capability-implies'; readonly a: CapabilityId; readonly b: CapabilityId; readonly rationale: string }
+  | { readonly kind: 'capability-single-provider'; readonly capability: CapabilityId; readonly rationale: string };
+
+export type GlobalRuleKind = GlobalRule['kind'];
+
+/** Every capability a rule mentions. */
+export function ruleCapabilities(rule: GlobalRule): readonly CapabilityId[] {
+  return rule.kind === 'capability-single-provider' ? [rule.capability] : [rule.a, rule.b];
+}
 
 export interface AssetNode {
   readonly path: string;

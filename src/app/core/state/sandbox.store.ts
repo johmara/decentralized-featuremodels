@@ -3,6 +3,7 @@ import {
   SandboxEditError,
   addCapability,
   addFeature,
+  addGlobalRule,
   addMutexRule,
   addScope,
   emptySandboxExample,
@@ -20,7 +21,7 @@ import {
   type AddScopeInput,
 } from '../engine/sandbox-edit';
 import { validateExample } from '../engine/validate-example';
-import type { Capability, CapabilityId, Example, FeatureId, ModelId } from '../model/feature-model.types';
+import type { Capability, CapabilityId, Example, FeatureId, GlobalRule, ModelId } from '../model/feature-model.types';
 
 const STORAGE_KEY = 'dfm.sandbox.v1';
 
@@ -141,6 +142,10 @@ export class SandboxStore {
 
   removeCapability(capabilityId: CapabilityId): void {
     this.guarded(() => removeCapability(this.example(), capabilityId));
+  }
+
+  addGlobalRule(rule: GlobalRule): void {
+    this.guarded(() => addGlobalRule(this.example(), rule));
   }
 
   addMutexRule(a: CapabilityId, b: CapabilityId, rationale: string): void {

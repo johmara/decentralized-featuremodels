@@ -23,10 +23,6 @@ export const routes: Routes = [
     loadComponent: () => import('./features/sandbox/sandbox-page').then((m) => m.SandboxPage),
   },
   {
-    path: 'paper',
-    loadComponent: () => import('./features/paper/paper-page').then((m) => m.PaperPage),
-  },
-  {
     path: '**',
     loadComponent: () => import('./features/not-found/not-found-page').then((m) => m.NotFoundPage),
   },
