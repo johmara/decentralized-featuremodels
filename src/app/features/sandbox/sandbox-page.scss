@@ -20,16 +20,6 @@
   flex-wrap: wrap;
 }
 
-.sandbox-page__toolbar button,
-.sandbox-page__import {
-  border: 1.5px solid var(--border);
-  background: var(--surface-raised);
-  border-radius: var(--radius-md);
-  padding: var(--space-1) var(--space-3);
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
 .sandbox-page__toolbar button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -58,10 +48,6 @@
   padding: var(--space-3);
   margin: var(--space-2) 0;
 }
-
-.sandbox-form input,
-.sandbox-form select,
-.sandbox-form button,
 
 .sandbox-page__pill-list {
   list-style: none;
@@ -94,6 +80,84 @@
 .sandbox-form--inline {
   border: none;
   padding: 0;
+}
+
+/* Form controls — same border, radius, and accent behavior as the buttons on the example pages. */
+.sandbox-page input:not([type='checkbox']):not([type='file']),
+.sandbox-page select {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  padding: var(--space-2) var(--space-3);
+  min-width: 0;
+  transition: border-color var(--transition-fast);
+}
+
+.sandbox-page input::placeholder {
+  color: var(--text-muted);
+}
+
+.sandbox-page input:not([type='checkbox']):hover,
+.sandbox-page select:hover {
+  border-color: var(--text-muted);
+}
+
+.sandbox-page input:not([type='checkbox']):focus-visible,
+.sandbox-page select:focus-visible {
+  border-color: var(--accent);
+  outline-offset: 0;
+}
+
+.sandbox-page input[type='checkbox'] {
+  accent-color: var(--accent);
+}
+
+.sandbox-page__toolbar button,
+.sandbox-page__import,
+.sandbox-form button,
+.primary-button {
+  border: 1.5px solid var(--border);
+  background: var(--surface-raised);
+  color: var(--text);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.sandbox-page__toolbar button:hover:not(:disabled),
+.sandbox-page__import:hover,
+.sandbox-form button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.sandbox-page__import input {
+  display: none;
+}
+
+/* The one action per form that commits something. */
+.sandbox-form button[type='submit'],
+.primary-button {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.sandbox-form button[type='submit']:hover:not(:disabled) {
+  color: var(--surface);
+  filter: brightness(1.1);
+}
+
+.sandbox-form button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .sandbox-page__start {
@@ -133,6 +197,7 @@
 .inspector {
   border: 1.5px solid var(--accent);
   border-radius: var(--radius-md);
+  background: var(--surface-raised);
   padding: var(--space-3);
   margin-top: var(--space-2);
   display: flex;
@@ -167,21 +232,33 @@
 
 .inspector__new input {
   width: 11rem;
+  padding: var(--space-1) var(--space-3);
+}
+
+.inspector input:not([type='checkbox']),
+.inspector select {
+  padding: var(--space-1) var(--space-3);
 }
 
 .chip {
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   background: var(--surface-raised);
   color: var(--text);
   border-radius: 999px;
   padding: 2px var(--space-3);
   font-size: 0.8rem;
   cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.chip:hover {
+  border-color: var(--accent);
 }
 
 .chip--on {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface-raised));
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-raised));
   font-weight: 600;
 }
 
@@ -204,10 +281,10 @@
   cursor: not-allowed;
 }
 
-
 .rule-warning {
   border: 1.5px solid var(--danger);
   border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface));
   padding: var(--space-3);
   margin: var(--space-2) 0;
   font-size: 0.85rem;
