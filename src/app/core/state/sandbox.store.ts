@@ -10,8 +10,13 @@ import {
   removeFeature,
   removeGlobalRule,
   removeScope,
+  renameFeature,
+  renameScope,
   setFeatureCapabilities,
+  setFeatureKind,
+  suggestCapabilityId,
   type AddFeatureInput,
+  type FeatureKind,
   type AddScopeInput,
 } from '../engine/sandbox-edit';
 import { validateExample } from '../engine/validate-example';
@@ -144,5 +149,31 @@ export class SandboxStore {
 
   removeGlobalRule(index: number): void {
     this.guarded(() => removeGlobalRule(this.example(), index));
+  }
+
+  renameScope(modelId: ModelId, name: string): void {
+    this.guarded(() => renameScope(this.example(), modelId, name));
+  }
+
+  renameFeature(modelId: ModelId, featureId: FeatureId, name: string): void {
+    this.guarded(() => renameFeature(this.example(), modelId, featureId, name));
+  }
+
+  setFeatureKind(modelId: ModelId, featureId: FeatureId, kind: FeatureKind): void {
+    this.guarded(() => setFeatureKind(this.example(), modelId, featureId, kind));
+  }
+
+  /**
+   * Creates a capability named `name` and attaches it to one feature as a
+   * requirement or provision, as a single undo step.
+   */
+  createCapabilityOn(modelId: ModelId, featureId: FeatureId, kind: 'requires' | 'provides', name: string): void {
+    this.guarded(() => {
+      const example = this.example();
+      const id = suggestCapabilityId(example, name);
+      const withCapability = addCapability(example, { id, name: name.trim() || id, description: '' });
+      const feature = withCapability.models.find((m) => m.id === modelId)?.features[featureId];
+      return setFeatureCapabilities(withCapability, modelId, featureId, kind, [...(feature?.[kind] ?? []), id]);
+    });
   }
 }

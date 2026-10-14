@@ -24,6 +24,11 @@
   opacity: 0.45;
 }
 
+.node--focused .node__box {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
 .node--disabled {
   cursor: not-allowed;
   opacity: 0.5;
@@ -60,4 +65,19 @@
   outline: none;
   stroke: var(--focus-ring);
   stroke-width: 3;
+}
+
+/* Halo in the surface color keeps the tag readable where it crosses a tree edge. */
+.node__cap {
+  font-size: 10px;
+  fill: var(--accent);
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.node__cap--provides {
+  fill: var(--success);
 }

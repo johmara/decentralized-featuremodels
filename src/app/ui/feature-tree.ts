@@ -22,6 +22,7 @@ interface RenderedEdge {
 /** Renders one feature model as a tidy tree with FODA glyphs. Presentational — no store injection. */
 @Component({
   selector: 'app-feature-tree',
+  host: { '(document:keydown)': 'onDocumentKeydown($event)' },
   imports: [FeatureNode],
   templateUrl: './feature-tree.html',
   styleUrl: './feature-tree.scss',
@@ -36,8 +37,11 @@ export class FeatureTree {
    * size so a surrounding scroll container can pan over it.
    */
   readonly zoom = input<number | null>(null);
+  /** A feature to outline as "currently being edited" — used by the sandbox editor. */
+  readonly focusedId = input<FeatureId | null>(null);
 
   readonly toggle = output<FeatureId>();
+  readonly edit = output<FeatureId>();
 
   readonly layout = computed(() => layoutTree(this.model()));
 
@@ -103,7 +107,27 @@ export class FeatureTree {
     return 'unselected';
   }
 
+  /** The feature under the mouse, so "e" can edit it without it having keyboard focus. */
+  private hoveredId: FeatureId | null = null;
+
+  onHover(id: FeatureId, entering: boolean): void {
+    if (entering) this.hoveredId = id;
+    else if (this.hoveredId === id) this.hoveredId = null;
+  }
+
+  onDocumentKeydown(event: KeyboardEvent): void {
+    if (this.hoveredId === null || (event.key !== 'e' && event.key !== 'E')) return;
+    if (event.ctrlKey || event.metaKey || event.altKey || isTextEntry(event.target)) return;
+    event.preventDefault();
+    this.edit.emit(this.hoveredId);
+  }
+
   onActivate(id: FeatureId): void {
     this.toggle.emit(id);
   }
+}
+
+function isTextEntry(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
 }

@@ -151,19 +151,7 @@ export function removeFeature(example: Example, modelId: ModelId, featureId: Fea
     features[feature.parentId] = { ...parent, childIds: parent.childIds.filter((id) => id !== featureId) };
   }
 
-  let groups = model.groups;
-  if (feature.groupId) {
-    const group = groups[feature.groupId];
-    if (group) {
-      const memberIds = group.memberIds.filter((id) => id !== featureId);
-      if (memberIds.length === 0) {
-        const { [feature.groupId]: _removed, ...rest } = groups;
-        groups = rest;
-      } else {
-        groups = { ...groups, [feature.groupId]: { ...group, memberIds } };
-      }
-    }
-  }
+  const groups = withoutGroupMember(model.groups, feature);
 
   const constraints = model.constraints.filter((constraint) => {
     if (constraint.source === featureId) return false;
@@ -217,6 +205,97 @@ export function addMutexRule(example: Example, a: CapabilityId, b: CapabilityId,
 
 export function removeGlobalRule(example: Example, index: number): Example {
   return { ...example, globalRules: example.globalRules.filter((_, i) => i !== index) };
+}
+
+/** Renames a feature. The id is unchanged, so selections and capability wiring survive. */
+export function renameFeature(example: Example, modelId: ModelId, featureId: FeatureId, name: string): Example {
+  const model = mustGetModel(example, modelId);
+  const feature = model.features[featureId];
+  if (!feature) throw new SandboxEditError(`Feature "${featureId}" does not exist in this scope.`);
+  const trimmed = name.trim();
+  if (!trimmed) throw new SandboxEditError('A feature needs a name.');
+  return replaceModel(example, { ...model, features: { ...model.features, [featureId]: { ...feature, name: trimmed } } });
+}
+
+/** Moves a non-root feature between mandatory, optional, and OR/XOR group membership under its current parent. */
+export function setFeatureKind(example: Example, modelId: ModelId, featureId: FeatureId, kind: FeatureKind): Example {
+  const model = mustGetModel(example, modelId);
+  const feature = model.features[featureId];
+  if (!feature) throw new SandboxEditError(`Feature "${featureId}" does not exist in this scope.`);
+  if (feature.parentId === null) throw new SandboxEditError('The root feature has no edge to change.');
+
+  let groups = withoutGroupMember(model.groups, feature);
+  let updated: Feature;
+  if (kind === 'or' || kind === 'xor') {
+    const groupId = `${feature.parentId}::${kind}`;
+    const existing = groups[groupId];
+    groups = {
+      ...groups,
+      [groupId]: existing
+        ? { ...existing, memberIds: [...existing.memberIds, featureId] }
+        : { id: groupId, parentId: feature.parentId, kind, memberIds: [featureId] },
+    };
+    updated = { ...feature, edge: 'grouped', groupId };
+  } else {
+    const { groupId: _dropped, ...rest } = feature;
+    updated = { ...rest, edge: kind };
+  }
+
+  return replaceModel(example, { ...model, groups, features: { ...model.features, [featureId]: updated } });
+}
+
+export function renameScope(example: Example, modelId: ModelId, name: string): Example {
+  const model = mustGetModel(example, modelId);
+  const trimmed = name.trim();
+  if (!trimmed) throw new SandboxEditError('A scope needs a name.');
+  return replaceModel(example, { ...model, name: trimmed });
+}
+
+/** The kind a feature currently has, in the vocabulary {@link addFeature} and {@link setFeatureKind} take. */
+export function featureKindOf(model: FeatureModel, featureId: FeatureId): FeatureKind {
+  const feature = model.features[featureId];
+  if (feature.edge !== 'grouped') return feature.edge;
+  return (feature.groupId && model.groups[feature.groupId]?.kind) || 'or';
+}
+
+/** "Order emails" -> "OrderEmails"; falls back to `fallback` when nothing usable is left. */
+function pascalCase(name: string, fallback: string): string {
+  const words = name.match(/[a-zA-Z0-9]+/g) ?? [];
+  const joined = words.map((word) => word[0].toUpperCase() + word.slice(1)).join('');
+  return joined || fallback;
+}
+
+function withSuffix(base: string, taken: (id: string) => boolean): string {
+  if (!taken(base)) return base;
+  let n = 2;
+  while (taken(`${base}${n}`)) n++;
+  return `${base}${n}`;
+}
+
+/** A fresh feature id derived from a display name, unique within the model. */
+export function suggestFeatureId(model: FeatureModel, name: string): FeatureId {
+  return withSuffix(pascalCase(name, 'Feature'), (id) => id in model.features);
+}
+
+/** A fresh scope id derived from a display name — lower-kebab, unique within the example. */
+export function suggestScopeId(example: Example, name: string): ModelId {
+  const base = (name.toLowerCase().match(/[a-z0-9]+/g) ?? []).join('-') || 'scope';
+  return withSuffix(base, (id) => example.models.some((model) => model.id === id));
+}
+
+/** A fresh capability id derived from a display name, unique within the example. */
+export function suggestCapabilityId(example: Example, name: string): CapabilityId {
+  return withSuffix(pascalCase(name, 'Capability'), (id) => example.capabilities.some((c) => c.id === id));
+}
+
+function withoutGroupMember(groups: FeatureModel['groups'], feature: Feature): FeatureModel['groups'] {
+  if (!feature.groupId) return groups;
+  const group = groups[feature.groupId];
+  if (!group) return groups;
+  const memberIds = group.memberIds.filter((id) => id !== feature.id);
+  if (memberIds.length > 0) return { ...groups, [feature.groupId]: { ...group, memberIds } };
+  const { [feature.groupId]: _removed, ...rest } = groups;
+  return rest;
 }
 
 function mustGetModel(example: Example, modelId: ModelId): FeatureModel {

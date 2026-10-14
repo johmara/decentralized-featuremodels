@@ -1,3 +1,8 @@
+<details class="scope-map-panel" open>
+  <summary>Scope map — how scopes depend on each other through capabilities</summary>
+  <app-scope-map [example]="example()" [excludedModelIds]="excludedModelIds()"></app-scope-map>
+</details>
+
 <div class="canvas">
   <div class="canvas__cards">
     @for (card of cards(); track card.model.id) {
@@ -17,7 +22,7 @@
                 [checked]="card.active"
                 (change)="onActiveToggle(card.model.id, !card.active)"
               />
-              Include this repo
+              Include this scope
             </label>
           }
           <button
@@ -50,7 +55,9 @@
               [model]="card.model"
               [propagation]="card.propagation"
               [disabled]="isLockedOut(card.model.id)"
+              [focusedId]="focusedIn(card.model.id)"
               (toggle)="onToggle(card.model.id, $event)"
+              (edit)="featureEdit.emit({ modelId: card.model.id, featureId: $event })"
             ></app-feature-tree>
           }
 
@@ -59,6 +66,10 @@
               <app-validity-badge [valid]="card.localValidity.valid" validLabel="Locally valid" invalidLabel="Locally invalid"></app-validity-badge>
             }
           </footer>
+        }
+
+        @if (cardEditor(); as editor) {
+          <ng-container [ngTemplateOutlet]="editor" [ngTemplateOutletContext]="{ $implicit: card.model }"></ng-container>
         }
       </section>
     }

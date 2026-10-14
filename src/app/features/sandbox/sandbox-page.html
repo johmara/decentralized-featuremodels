@@ -2,8 +2,7 @@
   <header>
     <h1>Sandbox</h1>
     <p>
-      Build your own decentralized feature model — add scopes, features, capabilities, and a
-      global rule — then configure it below and watch the resolver. Saved to this browser as you go.
+      Build, configure, and resolve in one place. Click a feature to select it; double-click it to rename it, change its kind, wire capabilities, or add children. The resolver on the right updates as you go. Saved to this browser.
     </p>
   </header>
 
@@ -16,6 +15,12 @@
       Import JSON
       <input type="file" accept="application/json" (change)="onImportFile($event)" />
     </label>
+    <span class="sandbox-page__start">
+      Start from:
+      @for (id of exampleIds; track id) {
+        <button type="button" (click)="startFrom(id)">{{ exampleTitle(id) }}</button>
+      }
+    </span>
   </div>
 
   @if (sandbox.lastError(); as err) {
@@ -32,79 +37,127 @@
     </details>
   }
 
-  <section class="sandbox-page__build">
-    <h2>Build</h2>
+  <section class="sandbox-page__workspace">
+    <div class="sandbox-page__workbar">
+      <form class="sandbox-form sandbox-form--inline" (submit)="onAddScope($event, scopeName)">
+        <input #scopeName placeholder="New scope name, e.g. Billing Service" aria-label="New scope name" />
+        <button type="submit">+ Add scope</button>
+      </form>
+      <p class="sandbox-page__hint">Click a feature to select it. Double-click (or press E) to edit it.</p>
+    </div>
 
-    <form class="sandbox-form" (submit)="onAddScope($event, scopeId, scopeName, scopeAsset, scopeOwner)">
-      <h3>Add a scope</h3>
-      <input #scopeId placeholder="id, e.g. billing" required />
-      <input #scopeName placeholder="Display name" />
-      <input #scopeAsset placeholder="Asset path, e.g. billing/" />
-      <input #scopeOwner placeholder="Owner label" />
-      <button type="submit">Add scope</button>
-    </form>
-
-    @for (model of example().models; track model.id) {
-      <div class="scope-block">
-        <div class="scope-block__header">
-          <h3>{{ model.name }} <code>{{ model.id }}</code></h3>
-          <button type="button" (click)="sandbox.removeScope(model.id)">Remove scope</button>
-        </div>
-
-        <app-feature-tree [model]="model" [propagation]="structurePropagation(model)" [disabled]="true"></app-feature-tree>
-
-        <form
-          class="sandbox-form"
-          (submit)="onAddFeature($event, model.id, featId, featName, featParent, featKind, featRequires, featProvides)"
-        >
-          <h4>Add a feature</h4>
-          <input #featId placeholder="id" required />
-          <input #featName placeholder="Display name" />
-          <select #featParent>
-            @for (id of model.featureOrder; track id) {
-              <option [value]="id">{{ model.features[id].name }}</option>
-            }
-          </select>
-          <select #featKind>
-            <option value="mandatory">Mandatory</option>
-            <option value="optional">Optional</option>
-            <option value="or">OR group member</option>
-            <option value="xor">XOR group member</option>
-          </select>
-          <select #featRequires multiple [attr.aria-label]="'Requires (' + model.name + ')'">
-            @for (cap of example().capabilities; track cap.id) {
-              <option [value]="cap.id">requires {{ cap.name }}</option>
-            }
-          </select>
-          <select #featProvides multiple [attr.aria-label]="'Provides (' + model.name + ')'">
-            @for (cap of example().capabilities; track cap.id) {
-              <option [value]="cap.id">provides {{ cap.name }}</option>
-            }
-          </select>
-          <button type="submit">Add feature</button>
-        </form>
-
-        <ul class="scope-block__features">
-          @for (id of model.featureOrder; track id) {
-            <li>
-              {{ model.features[id].name }} <span class="scope-block__edge">({{ model.features[id].edge }})</span>
-              @if (id !== model.rootId) {
-                <button type="button" (click)="sandbox.removeFeature(model.id, id)">Remove</button>
-              }
-            </li>
-          }
-        </ul>
-      </div>
+    @if (example().models.length === 0) {
+      <p class="sandbox-page__hint">No scopes yet. Add one above, or start from an existing example.</p>
+    } @else {
+      <app-decentralized-view
+        [example]="example()"
+        [propagation]="propagation()"
+        [localResults]="localResults()"
+        [ledger]="ledger()"
+        [global]="global()"
+        [globalExplanations]="globalExplanations()"
+        [activeScope]="activeScope()"
+        [excludedModelIds]="excludedModelIds()"
+        [canExclude]="true"
+        [focused]="selected()"
+        [cardEditor]="scopeEditor"
+        (toggle)="onToggle($event)"
+        (featureEdit)="select($event.modelId, $event.featureId)"
+        (scopeSelect)="onScopeSelect($event)"
+        (modelActiveChange)="onModelActiveChange($event)"
+      ></app-decentralized-view>
     }
   </section>
 
+  <ng-template #scopeEditor let-model>
+    @if (selected()?.modelId === model.id) {
+      <div class="scope-edit">
+        <div class="inspector__row">
+          <label>
+            Scope name
+            <input [value]="model.name" (change)="sandbox.renameScope(model.id, $any($event.target).value)" />
+          </label>
+          <button type="button" class="link-button link-button--danger" (click)="onRemoveScope(model.id)">Remove scope</button>
+        </div>
+    @if (selectedIn(model); as feature) {
+      <div class="inspector" role="region" [attr.aria-label]="'Edit ' + feature.name">
+        <div class="inspector__row">
+          <label>
+            Name
+            <input #nameInput [value]="feature.name" (change)="sandbox.renameFeature(model.id, feature.id, nameInput.value)" />
+          </label>
+          <code class="inspector__id">{{ feature.id }}</code>
+          <button type="button" class="link-button" (click)="selected.set(null)">Close</button>
+        </div>
+
+        @if (feature.parentId !== null) {
+          <div class="inspector__row" role="radiogroup" aria-label="Kind">
+            <span class="inspector__label">Kind</span>
+            @for (kind of kinds; track kind.value) {
+              <button
+                type="button"
+                class="chip"
+                role="radio"
+                [attr.aria-checked]="kindOf(model, feature.id) === kind.value"
+                [class.chip--on]="kindOf(model, feature.id) === kind.value"
+                (click)="sandbox.setFeatureKind(model.id, feature.id, kind.value)"
+              >{{ kind.label }}</button>
+            }
+          </div>
+        }
+
+        @for (direction of directions; track direction) {
+          <div class="inspector__row">
+            <span class="inspector__label">{{ direction === 'requires' ? 'Requires' : 'Provides' }}</span>
+            @for (cap of example().capabilities; track cap.id) {
+              <button
+                type="button"
+                class="chip"
+                [attr.aria-pressed]="hasCapability(feature, direction, cap.id)"
+                [class.chip--on]="hasCapability(feature, direction, cap.id)"
+                (click)="toggleCapability(model.id, feature, direction, cap.id)"
+              >{{ cap.name }}</button>
+            }
+            <form class="inspector__new" (submit)="onNewCapability($event, model.id, feature.id, direction, newCap)">
+              <input #newCap [placeholder]="'+ new capability'" [attr.aria-label]="'New capability this feature ' + direction" />
+            </form>
+          </div>
+        }
+
+        <form class="inspector__row" (submit)="onAddChild($event, model, feature.id, childName, childKind)">
+          <span class="inspector__label">Add child</span>
+          <input #childName placeholder="Child feature name" aria-label="Child feature name" />
+          <select #childKind aria-label="Child kind">
+            @for (kind of kinds; track kind.value) {
+              <option [value]="kind.value" [selected]="kind.value === 'optional'">{{ kind.label }}</option>
+            }
+          </select>
+          <button type="submit" class="primary-button">Add</button>
+        </form>
+
+        @if (feature.parentId !== null) {
+          <div class="inspector__row">
+            <button
+              type="button"
+              class="link-button link-button--danger"
+              [disabled]="feature.childIds.length > 0"
+              [title]="feature.childIds.length > 0 ? 'Remove its children first' : ''"
+              (click)="onRemoveFeature(model.id, feature.id, feature.parentId)"
+            >Delete feature</button>
+          </div>
+        }
+      </div>
+    }
+      </div>
+    }
+  </ng-template>
+
   <section class="sandbox-page__capabilities">
     <h2>Capabilities</h2>
-    <form class="sandbox-form" (submit)="onAddCapability($event, capId, capName, capDesc)">
-      <input #capId placeholder="id" required />
-      <input #capName placeholder="Display name" />
-      <input #capDesc placeholder="Description" />
-      <button type="submit">Add capability</button>
+    <form class="sandbox-form sandbox-form--inline" (submit)="onAddCapability($event, capName, capDesc)">
+      <input #capName placeholder="Capability name" aria-label="Capability name" />
+      <input #capDesc placeholder="Description (optional)" aria-label="Capability description" />
+      <button type="submit">+ Add capability</button>
     </form>
     <ul class="sandbox-page__pill-list">
       @for (cap of example().capabilities; track cap.id) {
@@ -115,7 +168,7 @@
 
   <section class="sandbox-page__rules">
     <h2>Global rules</h2>
-    <form class="sandbox-form" (submit)="onAddRule($event, ruleA, ruleB, ruleWhy)">
+    <form class="sandbox-form sandbox-form--inline" (submit)="onAddRule($event, ruleA, ruleB, ruleWhy)">
       <select #ruleA [attr.aria-label]="'First capability'">
         @for (cap of example().capabilities; track cap.id) {
           <option [value]="cap.id">{{ cap.name }}</option>
@@ -140,22 +193,4 @@
     </ul>
   </section>
 
-  <section class="sandbox-page__configure">
-    <h2>Configure &amp; resolve</h2>
-    @if (example().models.length === 0) {
-      <p>Add at least one scope above to start configuring.</p>
-    } @else {
-      <app-decentralized-view
-        [example]="example()"
-        [propagation]="propagation()"
-        [localResults]="localResults()"
-        [ledger]="ledger()"
-        [global]="global()"
-        [globalExplanations]="globalExplanations()"
-        [activeScope]="activeScope()"
-        (toggle)="onToggle($event)"
-        (scopeSelect)="onScopeSelect($event)"
-      ></app-decentralized-view>
-    }
-  </section>
 </main>

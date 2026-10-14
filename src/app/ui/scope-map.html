@@ -1,0 +1,43 @@
+<div class="scope-map">
+  @if (example().models.length === 0) {
+    <p class="scope-map__empty">No scopes yet.</p>
+  } @else {
+    <svg
+      class="scope-map__svg"
+      [attr.viewBox]="viewBox()"
+      [style.max-width.px]="width()"
+      role="img"
+      aria-label="Scopes and the capabilities that connect them. Arrows point from the scope that requires a capability to the scope that provides it."
+    >
+      <defs>
+        <marker id="scope-map-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="scope-map__arrowhead"></path>
+        </marker>
+      </defs>
+
+      @for (edge of edges(); track edge.key) {
+        <path class="scope-map__edge" [class.scope-map__edge--excluded]="edge.excluded" [attr.d]="edge.d" marker-end="url(#scope-map-arrow)"></path>
+      }
+      @for (edge of edges(); track edge.key) {
+        <text class="scope-map__label" [class.scope-map__label--excluded]="edge.excluded" [attr.x]="edge.labelX" [attr.y]="edge.labelY" text-anchor="middle">{{ edge.label }}</text>
+      }
+
+      @for (box of boxes(); track box.id) {
+        <g class="scope-map__box" [class.scope-map__box--excluded]="box.excluded" [attr.transform]="'translate(' + box.x + ',' + box.y + ')'">
+          <rect [attr.width]="boxW" [attr.height]="boxH" rx="8" [style.stroke]="'var(' + box.colorToken + ')'"></rect>
+          <text [attr.x]="boxW / 2" [attr.y]="boxH / 2 + 4" text-anchor="middle">{{ box.name }}</text>
+          <title>{{ box.id }}{{ box.excluded ? ' (excluded)' : '' }}</title>
+        </g>
+      }
+    </svg>
+    <p class="scope-map__legend">Arrow: requires → provides, labeled with the capability.</p>
+  }
+
+  @if (unprovided().length > 0) {
+    <ul class="scope-map__unprovided">
+      @for (item of unprovided(); track item.capability) {
+        <li><strong>{{ item.capability }}</strong> is required by {{ item.requiredBy.join(', ') }}, but no included scope provides it.</li>
+      }
+    </ul>
+  }
+</div>

@@ -17,3 +17,13 @@
 @if (state() === 'dead') {
   <svg:text class="node__badge node__badge--dead" [attr.x]="node().width - 8" y="16" text-anchor="end" aria-hidden="true">&#10007;</svg:text>
 }
+
+@for (tag of capabilityTags(); track tag.key) {
+  <svg:text
+    class="node__cap"
+    [class.node__cap--provides]="tag.kind === 'provides'"
+    [attr.x]="labelX()"
+    [attr.y]="tag.y"
+    text-anchor="middle"
+  >{{ tag.text }}</svg:text>
+}

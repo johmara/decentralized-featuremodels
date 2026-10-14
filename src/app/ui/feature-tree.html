@@ -24,7 +24,10 @@
           [node]="node"
           [state]="stateOf(id)"
           [disabled]="disabled()"
+          [focused]="focusedId() === id"
           (activate)="onActivate(id)"
+          (edit)="edit.emit(id)"
+          (hover)="onHover(id, $event)"
         ></g>
       }
     }

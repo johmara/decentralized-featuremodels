@@ -10,7 +10,12 @@ import {
   removeFeature,
   removeGlobalRule,
   removeScope,
+  renameFeature,
+  renameScope,
   setFeatureCapabilities,
+  setFeatureKind,
+  suggestFeatureId,
+  suggestScopeId,
 } from './sandbox-edit';
 import { validateExample } from './validate-example';
 import { checkLocal } from './validity';
@@ -171,5 +176,44 @@ describe('sandbox-edit', () => {
       expect(() => checkLocal(model, new Set())).not.toThrow();
     }
     expect(validateExample(example)).toEqual([]);
+  });
+
+  it('setFeatureKind moves a feature between edge kinds and groups, keeping the model valid', () => {
+    let example = addScope(emptySandboxExample(), { id: 'a', name: 'A', assetPath: 'a/', ownerLabel: '', colorToken: '' });
+    example = addFeature(example, 'a', { id: 'X', name: 'X', parentId: 'Root', kind: 'optional' });
+    example = addFeature(example, 'a', { id: 'Y', name: 'Y', parentId: 'Root', kind: 'or' });
+
+    example = setFeatureKind(example, 'a', 'X', 'or');
+    expect(example.models[0].groups['Root::or'].memberIds).toEqual(['Y', 'X']);
+    expect(validateExample(example)).toEqual([]);
+
+    example = setFeatureKind(example, 'a', 'Y', 'mandatory');
+    example = setFeatureKind(example, 'a', 'X', 'xor');
+    expect(example.models[0].groups['Root::or']).toBeUndefined();
+    expect(example.models[0].features['Y'].edge).toBe('mandatory');
+    expect(example.models[0].features['Y'].groupId).toBeUndefined();
+    expect(example.models[0].features['X'].groupId).toBe('Root::xor');
+    expect(validateExample(example)).toEqual([]);
+
+    expect(() => setFeatureKind(example, 'a', 'Root', 'optional')).toThrow(SandboxEditError);
+  });
+
+  it('renames features and scopes without changing ids, and rejects empty names', () => {
+    let example = addScope(emptySandboxExample(), { id: 'a', name: 'A', assetPath: 'a/', ownerLabel: '', colorToken: '' });
+    example = renameScope(example, 'a', 'Billing');
+    example = renameFeature(example, 'a', 'Root', 'Billing Root');
+    expect(example.models[0].id).toBe('a');
+    expect(example.models[0].name).toBe('Billing');
+    expect(example.models[0].features['Root'].name).toBe('Billing Root');
+    expect(() => renameFeature(example, 'a', 'Root', '  ')).toThrow(SandboxEditError);
+  });
+
+  it('suggests unique ids from display names', () => {
+    let example = addScope(emptySandboxExample(), { id: 'billing-service', name: 'B', assetPath: '', ownerLabel: '', colorToken: '' });
+    expect(suggestScopeId(example, 'Billing Service')).toBe('billing-service2');
+    expect(suggestScopeId(example, '!!!')).toBe('scope');
+    example = addFeature(example, 'billing-service', { id: 'OrderEmails', name: 'x', parentId: 'Root', kind: 'optional' });
+    expect(suggestFeatureId(example.models[0], 'order emails')).toBe('OrderEmails2');
+    expect(suggestFeatureId(example.models[0], 'Gift cards')).toBe('GiftCards');
   });
 });

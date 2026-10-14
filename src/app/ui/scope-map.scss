@@ -1,0 +1,71 @@
+.scope-map {
+  font-family: var(--font-sans);
+  overflow-x: auto;
+}
+
+.scope-map__svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.scope-map__box rect {
+  fill: var(--surface-raised);
+  stroke-width: 2;
+}
+
+.scope-map__box text {
+  fill: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.scope-map__box--excluded {
+  opacity: 0.35;
+}
+
+.scope-map__box--excluded rect {
+  stroke-dasharray: 4 3;
+}
+
+.scope-map__edge {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+
+.scope-map__edge--excluded {
+  stroke-dasharray: 4 3;
+  opacity: 0.35;
+}
+
+.scope-map__arrowhead {
+  fill: var(--text-muted);
+}
+
+.scope-map__label {
+  font-size: 10px;
+  fill: var(--accent);
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.scope-map__label--excluded {
+  opacity: 0.35;
+}
+
+.scope-map__legend,
+.scope-map__empty {
+  margin: var(--space-1) 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.scope-map__unprovided {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-4);
+  font-size: 0.8rem;
+  color: var(--danger);
+}

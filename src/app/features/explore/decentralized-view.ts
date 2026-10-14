@@ -1,4 +1,6 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output, type TemplateRef } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { ScopeMap } from '../../ui/scope-map';
 import { FeatureTree } from '../../ui/feature-tree';
 import { FeatureTreeList } from '../../ui/feature-tree-list';
 import { ValidityBadge } from '../../ui/validity-badge';
@@ -34,7 +36,7 @@ interface ModelCardView {
  */
 @Component({
   selector: 'app-decentralized-view',
-  imports: [FeatureTree, FeatureTreeList, ValidityBadge, ExplanationList, CapabilityLane, TourAnchorDirective],
+  imports: [FeatureTree, FeatureTreeList, ValidityBadge, ExplanationList, CapabilityLane, TourAnchorDirective, ScopeMap, NgTemplateOutlet],
   templateUrl: './decentralized-view.html',
   styleUrl: './decentralized-view.scss',
 })
@@ -48,12 +50,20 @@ export class DecentralizedView {
   readonly activeScope = input<ModelId | null>(null);
   readonly listView = input(false);
   readonly excludedModelIds = input<ReadonlySet<ModelId>>(new Set());
+  /** Forces the per-scope include checkbox on (true) or off (false); unset defers to the example's `modelsAreOptional`. */
+  readonly canExclude = input<boolean | null>(null);
+  /** A feature to outline in its card — the sandbox's "being edited" marker. */
+  readonly focused = input<FeatureRef | null>(null);
+  /** Extra per-card content rendered under the tree (the sandbox's editor); context is the card's model. */
+  readonly cardEditor = input<TemplateRef<{ $implicit: FeatureModel }> | null>(null);
 
   readonly toggle = output<FeatureRef>();
+  /** Double-click / "e" on a feature. Only the sandbox listens. */
+  readonly featureEdit = output<FeatureRef>();
   readonly scopeSelect = output<ModelId | null>();
   readonly modelActiveChange = output<{ modelId: ModelId; active: boolean }>();
 
-  readonly modelsAreOptional = computed(() => this.example().modelsAreOptional === true);
+  readonly modelsAreOptional = computed(() => this.canExclude() ?? this.example().modelsAreOptional === true);
 
   readonly cards = computed<ModelCardView[]>(() => {
     const propagation = this.propagation();
@@ -69,6 +79,11 @@ export class DecentralizedView {
       };
     });
   });
+
+  focusedIn(modelId: ModelId): FeatureId | null {
+    const focused = this.focused();
+    return focused?.modelId === modelId ? focused.featureId : null;
+  }
 
   isEditing(modelId: ModelId): boolean {
     return this.activeScope() === modelId;

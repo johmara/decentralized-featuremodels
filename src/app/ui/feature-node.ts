@@ -24,10 +24,14 @@ export type FeatureVisualState = 'manual' | 'derived' | 'unselected' | 'dead';
     '[class.node--derived]': "state() === 'derived'",
     '[class.node--dead]': "state() === 'dead'",
     '[class.node--disabled]': 'disabled()',
+    '[class.node--focused]': 'focused()',
     '[attr.aria-pressed]': "state() === 'manual' || state() === 'derived'",
     '[attr.aria-disabled]': 'disabled() || null',
     '[attr.aria-label]': 'feature().name',
     '(click)': 'onActivate()',
+    '(dblclick)': 'edit.emit()',
+    '(mouseenter)': 'hover.emit(true)',
+    '(mouseleave)': 'hover.emit(false)',
     '(keydown)': 'onKeydown($event)',
   },
 })
@@ -36,13 +40,26 @@ export class FeatureNode {
   readonly node = input.required<PositionedNode>();
   readonly state = input.required<FeatureVisualState>();
   readonly disabled = input(false);
+  readonly focused = input(false);
 
   readonly activate = output<void>();
+  /** Double-click — used by the sandbox to open the feature editor ("e" while hovering is handled by the tree). */
+  readonly edit = output<void>();
+  readonly hover = output<boolean>();
 
   readonly transform = computed(() => `translate(${this.node().x - this.node().width / 2}, ${this.node().y})`);
   readonly labelX = computed(() => this.node().width / 2);
   readonly labelY = computed(() => this.node().height / 2 + 4);
   readonly dotCx = computed(() => this.node().width / 2);
+
+  /** Capability wiring, drawn as small labels under the box — the only links that cross scope boundaries. */
+  readonly capabilityTags = computed(() => {
+    const feature = this.feature();
+    return [
+      ...(feature.provides ?? []).map((id) => ({ key: `p:${id}`, text: `provides ${id}`, kind: 'provides' as const })),
+      ...(feature.requires ?? []).map((id) => ({ key: `r:${id}`, text: `requires ${id}`, kind: 'requires' as const })),
+    ].map((tag, i) => ({ ...tag, y: this.node().height + 13 + i * 12 }));
+  });
 
   onActivate(): void {
     if (this.disabled()) return;
