@@ -22,8 +22,8 @@ export const CHALLENGES: readonly ChallengeItem[] = [
     title: 'Structuring sub-models',
     detail: 'Should sub-models mirror the asset hierarchy (nested) or sit side by side (orthogonal)? Both appear in the examples.',
     relatesTo: 'R2',
-    demoLink: '/explore/enterprise?mode=decentralized',
-    demoLabel: 'A strict hierarchy (facade → module → micro API) vs. the phone’s flatter split',
+    demoLink: '/explore/microservices?mode=decentralized',
+    demoLabel: 'A flat mesh of services with no hierarchy vs. the phone’s subsystem split',
   },
   {
     id: 'C3',
@@ -38,8 +38,8 @@ export const CHALLENGES: readonly ChallengeItem[] = [
     title: 'Model sizing and maintainability',
     detail: 'Too few models and independence disappears; too many and the capability graph between them becomes its own maintenance burden.',
     relatesTo: 'R2',
-    demoLink: '/explore/enterprise?mode=decentralized',
-    demoLabel: 'Eleven small repos here — the tradeoff made concrete',
+    demoLink: '/explore/microservices?mode=decentralized',
+    demoLabel: 'Nine small repos here — the tradeoff made concrete',
   },
   {
     id: 'C5',

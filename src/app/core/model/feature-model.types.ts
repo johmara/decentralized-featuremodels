@@ -160,6 +160,14 @@ export interface Example {
   readonly assetTree: AssetNode;
   readonly presets: readonly ConfigPreset[];
   readonly comparisonNotes?: readonly ComparisonRow[];
+  /**
+   * When true, every model in this example may be individually excluded
+   * from a configuration — not every repo is deployed for every
+   * consumer. Absent/false means every model is assumed to always exist
+   * (the default for the phone and distro examples, where "the repo
+   * exists" isn't itself a configuration choice).
+   */
+  readonly modelsAreOptional?: boolean;
 }
 
 /** Selection state: per model, the set of manually selected feature ids. Everything else is derived. */

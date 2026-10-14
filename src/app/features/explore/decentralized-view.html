@@ -6,14 +6,26 @@
         [style.border-top-color]="'var(' + card.model.scope.colorToken + ')'"
         [class.card--active]="isEditing(card.model.id)"
         [class.card--locked-out]="isLockedOut(card.model.id)"
+        [class.card--excluded]="!card.active"
         [appTourAnchor]="'card-' + card.model.id"
       >
         <header class="card__header">
+          @if (modelsAreOptional()) {
+            <label class="card__include">
+              <input
+                type="checkbox"
+                [checked]="card.active"
+                (change)="onActiveToggle(card.model.id, !card.active)"
+              />
+              Include this repo
+            </label>
+          }
           <button
             type="button"
             class="card__lock"
             [class.card__lock--active]="isEditing(card.model.id)"
             [attr.aria-pressed]="isEditing(card.model.id)"
+            [disabled]="!card.active"
             (click)="onLockToggle(card.model.id)"
           >
             {{ isEditing(card.model.id) ? 'Editing — click to unlock' : 'Locked — click to edit' }}
@@ -23,40 +35,48 @@
           <p class="card__owner">{{ card.model.scope.ownerLabel }}</p>
         </header>
 
-        @if (listView()) {
-          <app-feature-tree-list
-            [model]="card.model"
-            [propagation]="card.propagation"
-            [disabled]="isLockedOut(card.model.id)"
-            (toggle)="onToggle(card.model.id, $event)"
-          ></app-feature-tree-list>
-        } @else {
-          <app-feature-tree
-            [model]="card.model"
-            [propagation]="card.propagation"
-            [disabled]="isLockedOut(card.model.id)"
-            (toggle)="onToggle(card.model.id, $event)"
-          ></app-feature-tree>
-        }
+        @if (!card.active) {
+          <p class="card__excluded-note">Not part of this configuration — its capabilities are treated as if this repo does not exist.</p>
+        } @else if (card.propagation) {
+          @if (listView()) {
+            <app-feature-tree-list
+              [model]="card.model"
+              [propagation]="card.propagation"
+              [disabled]="isLockedOut(card.model.id)"
+              (toggle)="onToggle(card.model.id, $event)"
+            ></app-feature-tree-list>
+          } @else {
+            <app-feature-tree
+              [model]="card.model"
+              [propagation]="card.propagation"
+              [disabled]="isLockedOut(card.model.id)"
+              (toggle)="onToggle(card.model.id, $event)"
+            ></app-feature-tree>
+          }
 
-        <footer class="card__footer">
-          <app-validity-badge [valid]="card.localValidity.valid" validLabel="Locally valid" invalidLabel="Locally invalid"></app-validity-badge>
-        </footer>
+          <footer class="card__footer">
+            @if (card.localValidity) {
+              <app-validity-badge [valid]="card.localValidity.valid" validLabel="Locally valid" invalidLabel="Locally invalid"></app-validity-badge>
+            }
+          </footer>
+        }
       </section>
     }
   </div>
 
-  <section class="canvas__capabilities" [appTourAnchor]="'capability-lane'">
-    <h3>Capabilities</h3>
-    <app-capability-lane [example]="example()" [ledger]="ledger()" [missing]="global().missing"></app-capability-lane>
-  </section>
+  <aside class="canvas__sidebar">
+    <section class="canvas__capabilities" [appTourAnchor]="'capability-lane'">
+      <h3>Capabilities</h3>
+      <app-capability-lane [example]="example()" [ledger]="ledger()" [missing]="global().missing"></app-capability-lane>
+    </section>
 
-  <section class="canvas__resolver" [appTourAnchor]="'resolver-panel'">
-    <h3>Global resolver</h3>
-    <app-validity-badge [valid]="global().valid" validLabel="Globally valid" invalidLabel="Globally invalid"></app-validity-badge>
-    <app-explanation-list
-      [explanations]="globalExplanations()"
-      emptyText="Every required capability is provided, and no global rule is violated."
-    ></app-explanation-list>
-  </section>
+    <section class="canvas__resolver" [appTourAnchor]="'resolver-panel'">
+      <h3>Global resolver</h3>
+      <app-validity-badge [valid]="global().valid" validLabel="Globally valid" invalidLabel="Globally invalid"></app-validity-badge>
+      <app-explanation-list
+        [explanations]="globalExplanations()"
+        emptyText="Every required capability is provided, and no global rule is violated."
+      ></app-explanation-list>
+    </section>
+  </aside>
 </div>

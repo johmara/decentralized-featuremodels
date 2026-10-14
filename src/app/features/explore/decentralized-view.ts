@@ -14,8 +14,10 @@ import type { Example, FeatureId, FeatureModel, FeatureRef, ModelId } from '../.
 
 interface ModelCardView {
   readonly model: FeatureModel;
-  readonly propagation: ModelPropagation;
-  readonly localValidity: LocalValidity;
+  readonly active: boolean;
+  /** Null exactly when the model is excluded — nothing was computed for it. */
+  readonly propagation: ModelPropagation | null;
+  readonly localValidity: LocalValidity | null;
 }
 
 /**
@@ -24,6 +26,11 @@ interface ModelCardView {
  * that makes "these models coexist without a shared instance" visible.
  * Presentational: every input is data the page already had from
  * ConfigStore; this component computes no engine state of its own.
+ *
+ * `example` is always the FULL example (every model rendered as a card,
+ * even excluded ones, so they can be switched back on) — `propagation`,
+ * `localResults`, `ledger`, and `global` are computed against whatever
+ * subset is currently active, per ConfigStore.activeExample.
  */
 @Component({
   selector: 'app-decentralized-view',
@@ -40,18 +47,27 @@ export class DecentralizedView {
   readonly globalExplanations = input.required<readonly Explanation[]>();
   readonly activeScope = input<ModelId | null>(null);
   readonly listView = input(false);
+  readonly excludedModelIds = input<ReadonlySet<ModelId>>(new Set());
 
   readonly toggle = output<FeatureRef>();
   readonly scopeSelect = output<ModelId | null>();
+  readonly modelActiveChange = output<{ modelId: ModelId; active: boolean }>();
+
+  readonly modelsAreOptional = computed(() => this.example().modelsAreOptional === true);
 
   readonly cards = computed<ModelCardView[]>(() => {
     const propagation = this.propagation();
     const localResults = this.localResults();
-    return this.example().models.map((model) => ({
-      model,
-      propagation: propagation.byModel.get(model.id)!,
-      localValidity: localResults.get(model.id)!,
-    }));
+    const excluded = this.excludedModelIds();
+    return this.example().models.map((model) => {
+      const active = !excluded.has(model.id);
+      return {
+        model,
+        active,
+        propagation: active ? (propagation.byModel.get(model.id) ?? null) : null,
+        localValidity: active ? (localResults.get(model.id) ?? null) : null,
+      };
+    });
   });
 
   isEditing(modelId: ModelId): boolean {
@@ -69,5 +85,9 @@ export class DecentralizedView {
 
   onToggle(modelId: ModelId, featureId: FeatureId): void {
     this.toggle.emit({ modelId, featureId });
+  }
+
+  onActiveToggle(modelId: ModelId, active: boolean): void {
+    this.modelActiveChange.emit({ modelId, active });
   }
 }

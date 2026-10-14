@@ -38,94 +38,30 @@ describe('every shipped example', () => {
   }
 });
 
-describe('enterprise example presets', () => {
-  it('"everything-wired" is globally valid, with Carrier Routing provided by two separate repos', () => {
-    const manual = selectionFromPreset('enterprise', 'everything-wired');
-    const { selection } = propagateAll(EXAMPLES['enterprise'], manual);
-    const result = resolveGlobal(EXAMPLES['enterprise'], selection);
+describe('microservices example presets', () => {
+  const resolve = (presetId: string) => {
+    const { selection } = propagateAll(EXAMPLES['microservices'], selectionFromPreset('microservices', presetId));
+    return resolveGlobal(EXAMPLES['microservices'], selection);
+  };
+
+  it('"everything-wired" is valid, with Payment Processing provided by two services', () => {
+    const result = resolve('everything-wired');
     expect(result.valid).toBe(true);
-    expect(result.ledger.provided.get('CarrierRouting')?.length).toBe(2);
-    const providerModels = new Set(result.ledger.provided.get('CarrierRouting')?.map((ref) => ref.modelId));
-    expect(providerModels).toEqual(new Set(['enterprise.micro-api.routing-v2', 'enterprise.micro-api.routing-v3']));
+    expect(result.ledger.provided.get('PaymentProcessing')).toHaveLength(2);
   });
 
-  it('Freight Calculation is provided jointly by the Execution and Finance Module APIs', () => {
-    const manual = selectionFromPreset('enterprise', 'everything-wired');
-    const { selection } = propagateAll(EXAMPLES['enterprise'], manual);
-    const result = resolveGlobal(EXAMPLES['enterprise'], selection);
-    const providerModels = new Set(result.ledger.provided.get('FreightCalculation')?.map((ref) => ref.modelId));
-    expect(providerModels).toEqual(new Set(['enterprise.module-api.execution', 'enterprise.module-api.finance']));
-  });
-
-  it('"validation-disabled" reports Shipment Validation missing and notifies only the Validation v1 repo', () => {
-    const manual = selectionFromPreset('enterprise', 'validation-disabled');
-    const { selection } = propagateAll(EXAMPLES['enterprise'], manual);
-    const result = resolveGlobal(EXAMPLES['enterprise'], selection);
+  it('"search-missing" notifies only the Search Service', () => {
+    const result = resolve('search-missing');
     expect(result.valid).toBe(false);
-    const missing = result.missing.find((m) => m.capability === 'ShipmentValidation');
-    expect(missing?.diagnosis).toBe('unprovisioned');
-    expect(missing?.notifyModels).toEqual(['enterprise.micro-api.validation-v1']);
+    const missing = result.missing.find((m) => m.capability === 'ProductSearch');
+    expect(missing?.notifyModels).toEqual(['ms.search']);
   });
 
-  it('"dangerous-goods" is globally valid, with DangerousGoods required by two independent frontends and provided by one Module API', () => {
-    const manual = selectionFromPreset('enterprise', 'dangerous-goods');
-    const { selection } = propagateAll(EXAMPLES['enterprise'], manual);
-    const result = resolveGlobal(EXAMPLES['enterprise'], selection);
-    expect(result.valid).toBe(true);
-
-    const requirers = new Set(result.ledger.required.get('DangerousGoods')?.map((ref) => ref.modelId));
-    expect(requirers).toEqual(new Set(['enterprise.frontend.shipment-portal', 'enterprise.frontend.tracking-portal']));
-
-    const providers = result.ledger.provided.get('DangerousGoods');
-    expect(providers).toHaveLength(1);
-    expect(providers?.[0].modelId).toBe('enterprise.module-api.execution');
-  });
-
-  it('"dangerous-goods-missing" is globally invalid, and notifies only the Execution Module API', () => {
-    const manual = selectionFromPreset('enterprise', 'dangerous-goods-missing');
-    const { selection } = propagateAll(EXAMPLES['enterprise'], manual);
-    const result = resolveGlobal(EXAMPLES['enterprise'], selection);
+  it('"no-notifications" notifies only the Notification Service', () => {
+    const result = resolve('no-notifications');
     expect(result.valid).toBe(false);
-
-    const missing = result.missing.find((m) => m.capability === 'DangerousGoods');
-    expect(missing?.diagnosis).toBe('unprovisioned');
-    expect(missing?.notifyModels).toEqual(['enterprise.module-api.execution']);
-    expect(missing?.notifyModels).not.toContain('enterprise.frontend.tracking-portal');
-    expect(missing?.notifyModels).not.toContain('enterprise.frontend.shipment-portal');
-  });
-
-  it('no capability id is named after the API/layer that exposes it', () => {
-    const bannedSuffixes = ['Api', 'Orchestration'];
-    for (const capability of EXAMPLES['enterprise'].capabilities) {
-      for (const suffix of bannedSuffixes) {
-        expect(capability.id.endsWith(suffix)).toBe(false);
-      }
-    }
-  });
-
-  it('module APIs and facades each provide more than one capability; micro APIs provide exactly one', () => {
-    const example = EXAMPLES['enterprise'];
-    const moduleAndFacadeIds = [
-      'enterprise.api-facade.default',
-      'enterprise.module-api.execution',
-      'enterprise.module-api.finance',
-    ];
-    for (const modelId of moduleAndFacadeIds) {
-      const model = example.models.find((m) => m.id === modelId)!;
-      const providedByRoot = model.features[model.rootId].provides ?? [];
-      expect(providedByRoot.length).toBeGreaterThan(1);
-    }
-
-    const microApiIds = [
-      'enterprise.micro-api.routing-v2',
-      'enterprise.micro-api.routing-v3',
-      'enterprise.micro-api.tracking-numbers',
-    ];
-    for (const modelId of microApiIds) {
-      const model = example.models.find((m) => m.id === modelId)!;
-      const allProvides = Object.values(model.features).flatMap((f) => f.provides ?? []);
-      expect(allProvides).toHaveLength(1);
-    }
+    const missing = result.missing.find((m) => m.capability === 'NotificationDelivery');
+    expect(missing?.notifyModels).toEqual(['ms.notification']);
   });
 });
 

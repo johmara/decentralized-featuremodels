@@ -67,8 +67,10 @@
       [globalExplanations]="globalExplanations()"
       [activeScope]="store.activeScope()"
       [listView]="listView()"
+      [excludedModelIds]="store.excludedModelIds()"
       (toggle)="onToggle($event)"
       (scopeSelect)="onScopeSelect($event)"
+      (modelActiveChange)="onModelActiveChange($event)"
     ></app-decentralized-view>
   }
 

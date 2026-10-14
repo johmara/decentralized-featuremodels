@@ -117,7 +117,7 @@ export const MAIN_TOUR: Tour = {
       narration: {
         title: 'From here',
         body:
-          'The same idea shows up wherever ownership is split: a layered service platform with independently versioned APIs, or a Linux distribution with no owner at all. Explore either one, or see how this compares to existing feature-modeling techniques on the Compare page.',
+          'The same idea shows up wherever ownership is split: a microservice webshop where services connect only through capabilities, or a Linux distribution with no owner at all. Explore either one, or see how this compares to existing feature-modeling techniques on the Compare page.',
       },
       precondition: { mode: 'decentralized', scope: null, presetId: 'comic-email' },
     },

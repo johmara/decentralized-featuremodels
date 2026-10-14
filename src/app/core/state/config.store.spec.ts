@@ -81,4 +81,51 @@ describe('ConfigStore', () => {
     expect(store.manual().size).toBe(0);
     expect(store.activeScope()).toBeNull();
   });
+
+  it('every model starts active, and phone (modelsAreOptional unset) ignores setModelActive', () => {
+    const store = new ConfigStore();
+    expect(store.excludedModelIds().size).toBe(0);
+    store.setModelActive('phone.connectivity', false);
+    expect(store.activeExample().models.map((m) => m.id)).toEqual(store.example().models.map((m) => m.id));
+  });
+
+  it('excluding a model on an example with modelsAreOptional removes it from activeExample and the resolver', () => {
+    const store = new ConfigStore();
+    store.setExample('microservices');
+    store.loadPreset('everything-wired');
+    expect(store.global().valid).toBe(true);
+
+    store.setModelActive('ms.payment-card', false);
+    expect(store.activeExample().models.some((m) => m.id === 'ms.payment-card')).toBe(false);
+    // Payment Processing still has the invoice service as a provider, so this alone should not break validity.
+    expect(store.global().valid).toBe(true);
+
+    store.setModelActive('ms.payment-invoice', false);
+    expect(store.global().valid).toBe(false);
+    const missing = store.global().missing.find((m) => m.capability === 'PaymentProcessing');
+    expect(missing?.diagnosis).toBe('unprovidable');
+  });
+
+  it('re-including a model restores it to activeExample and its manual selection is intact', () => {
+    const store = new ConfigStore();
+    store.setExample('microservices');
+    store.loadPreset('everything-wired');
+
+    store.setModelActive('ms.search', false);
+    expect(store.activeExample().models.some((m) => m.id === 'ms.search')).toBe(false);
+
+    store.setModelActive('ms.search', true);
+    expect(store.activeExample().models.some((m) => m.id === 'ms.search')).toBe(true);
+    expect(store.manual().get('ms.search')?.has('Enabled')).toBe(true);
+  });
+
+  it('switching to a new example resets excludedModelIds', () => {
+    const store = new ConfigStore();
+    store.setExample('microservices');
+    store.setModelActive('ms.payment-card', false);
+    expect(store.excludedModelIds().size).toBe(1);
+
+    store.setExample('microservices');
+    expect(store.excludedModelIds().size).toBe(0);
+  });
 });

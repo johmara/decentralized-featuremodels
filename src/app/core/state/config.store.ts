@@ -37,26 +37,46 @@ export class ConfigStore {
   private readonly _mode = signal<Mode>('centralized');
   private readonly _activeScope = signal<ModelId | null>(null);
   private readonly _manual = signal<Selection>(EMPTY_SELECTION);
+  /** Model ids excluded from the current configuration. Only meaningful when the example sets `modelsAreOptional`. */
+  private readonly _excludedModelIds = signal<ReadonlySet<ModelId>>(new Set());
 
   readonly exampleId = this._exampleId.asReadonly();
   readonly mode = this._mode.asReadonly();
   readonly activeScope = this._activeScope.asReadonly();
   readonly manual = this._manual.asReadonly();
+  readonly excludedModelIds = this._excludedModelIds.asReadonly();
 
   readonly example = computed<Example>(() => EXAMPLES[this._exampleId()]);
 
-  readonly propagation = computed(() => propagateAll(this.example(), this.manual()));
+  /** The example as it actually participates in analysis — excluded models removed entirely, as if those repos don't exist. */
+  readonly activeExample = computed<Example>(() => {
+    const example = this.example();
+    const excluded = this._excludedModelIds();
+    if (!example.modelsAreOptional || excluded.size === 0) return example;
+    return { ...example, models: example.models.filter((model) => !excluded.has(model.id)) };
+  });
+
+  readonly propagation = computed(() => propagateAll(this.activeExample(), this.manual()));
   readonly selection = computed(() => this.propagation().selection);
-  readonly localResults = computed(() => checkAllLocal(this.example(), this.selection()));
-  readonly ledger = computed(() => aggregate(this.example(), this.selection()));
-  readonly global = computed(() => resolveGlobal(this.example(), this.selection()));
-  readonly centralizedEquivalent = computed(() => centralize(this.example()));
+  readonly localResults = computed(() => checkAllLocal(this.activeExample(), this.selection()));
+  readonly ledger = computed(() => aggregate(this.activeExample(), this.selection()));
+  readonly global = computed(() => resolveGlobal(this.activeExample(), this.selection()));
+  readonly centralizedEquivalent = computed(() => centralize(this.activeExample()));
 
   setExample(id: ExampleId): void {
     if (!EXAMPLES[id]) return;
     this._exampleId.set(id);
     this._manual.set(EMPTY_SELECTION);
     this._activeScope.set(null);
+    this._excludedModelIds.set(new Set());
+  }
+
+  /** Only meaningful for examples with `modelsAreOptional` — elsewhere every model is always active. */
+  setModelActive(modelId: ModelId, active: boolean): void {
+    const next = new Set(this._excludedModelIds());
+    if (active) next.delete(modelId);
+    else next.add(modelId);
+    this._excludedModelIds.set(next);
   }
 
   setMode(mode: Mode): void {

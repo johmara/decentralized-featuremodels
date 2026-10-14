@@ -99,6 +99,10 @@ export class ExamplePage {
     this.store.setScope(modelId);
   }
 
+  onModelActiveChange(event: { modelId: ModelId; active: boolean }): void {
+    this.store.setModelActive(event.modelId, event.active);
+  }
+
   loadPreset(id: string): void {
     this.store.loadPreset(id);
   }
