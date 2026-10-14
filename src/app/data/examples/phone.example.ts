@@ -100,7 +100,7 @@ function centralizedModel(): FeatureModel {
       assetPath: 'repo/ (undivided)',
       assetKind: 'repo',
       modelFileName: 'phone.fm',
-      ownerLabel: 'Whoever owns the whole phone team',
+      ownerLabel: 'Whoever owns the whole phone',
       colorToken: '--surface-muted',
     },
     featureOrder: Object.keys(features),

@@ -21,7 +21,7 @@ export const MAIN_TOUR: Tour = {
       narration: {
         title: 'Everything, in one place',
         body:
-          'Messaging, Connectivity, and Keyboard all live in the same model. That works fine for one team. It stops working once Messaging, Connectivity, and Keyboard are built by three different teams, in three different repos, on three different release schedules — which is how real phones are actually built.',
+          'Messaging, Connectivity, and Keyboard all live in the same model. That works fine while one group maintains everything. It stops working once Messaging, Connectivity, and Keyboard are built in three different repos, on three different release schedules, by however many people each needs — which is how real phones are actually built.',
       },
       precondition: { mode: 'centralized', scope: null },
     },
@@ -41,7 +41,7 @@ export const MAIN_TOUR: Tour = {
       narration: {
         title: 'Scope = the assets a model governs',
         body:
-          'Click "lock to edit" on a card and it becomes the only one you can change. A model’s scope is the real folder it is placed on — messaging.fm governs messaging/, nothing else. It is owned by whoever works in that folder, not by a named team, because folders survive reorgs and teams don’t.',
+          'Click "lock to edit" on a card and it becomes the only one you can change. A model’s scope is the real folder it is placed on — messaging.fm governs messaging/, nothing else. A scope can have any number of people or teams working in it, and a team can work across several scopes — so a model belongs to its folder, not to a named team, because folders survive reorgs and team structures don’t.',
       },
       anchor: 'card-phone.messaging',
       precondition: { mode: 'decentralized', scope: 'phone.messaging' },
@@ -83,7 +83,7 @@ export const MAIN_TOUR: Tour = {
       id: 'missing-capability',
       route: '/explore/phone',
       narration: {
-        title: 'When something is missing, only one team hears about it',
+        title: 'When something is missing, only one scope hears about it',
         body:
           'This preset removes Connectivity’s network choice. InternetConnectivity is now unprovided — and the resolver notifies only the Connectivity scope, because that is the only scope that can fix it. Messaging never finds out its request failed for a reason it cannot act on.',
       },
