@@ -93,3 +93,63 @@
   border-top: 1px solid var(--border);
   padding-top: var(--space-3);
 }
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2);
+}
+
+.zoom-controls button {
+  border: 1.5px solid var(--border);
+  background: var(--surface-raised);
+  color: var(--text);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-3);
+  cursor: pointer;
+  font-size: 0.875rem;
+  min-width: 2.25rem;
+}
+
+.zoom-controls button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.zoom-controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.zoom-controls__level {
+  font-variant-numeric: tabular-nums;
+  min-width: 3.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.zoom-controls__hint {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.zoom-viewport {
+  overflow: auto;
+  max-height: 75vh;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+
+.zoom-viewport--pannable {
+  cursor: grab;
+}
+
+.zoom-viewport--panning {
+  cursor: grabbing;
+  user-select: none;
+}

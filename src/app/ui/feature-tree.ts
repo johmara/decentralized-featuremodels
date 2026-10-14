@@ -30,15 +30,33 @@ export class FeatureTree {
   readonly model = input.required<FeatureModel>();
   readonly propagation = input.required<ModelPropagation>();
   readonly disabled = input(false);
+  /**
+   * Scale factor against the layout's natural size. Unset (null), the tree
+   * shrinks to fit its container's width; set, it renders at a fixed pixel
+   * size so a surrounding scroll container can pan over it.
+   */
+  readonly zoom = input<number | null>(null);
 
   readonly toggle = output<FeatureId>();
 
   readonly layout = computed(() => layoutTree(this.model()));
 
+  private readonly pad = 32;
+
   readonly viewBox = computed(() => {
     const bounds = this.layout().bounds;
-    const pad = 32;
-    return `${-pad} ${-pad} ${bounds.width + pad * 2} ${bounds.height + pad * 2}`;
+    return `${-this.pad} ${-this.pad} ${bounds.width + this.pad * 2} ${bounds.height + this.pad * 2}`;
+  });
+
+  /** Natural (zoom = 1) pixel size of the rendered SVG, padding included. */
+  readonly naturalSize = computed(() => {
+    const bounds = this.layout().bounds;
+    return { width: bounds.width + this.pad * 2, height: bounds.height + this.pad * 2 };
+  });
+
+  readonly pixelWidth = computed(() => {
+    const zoom = this.zoom();
+    return zoom === null ? null : this.naturalSize().width * zoom;
   });
 
   readonly nodeIds = computed(() => this.model().featureOrder);

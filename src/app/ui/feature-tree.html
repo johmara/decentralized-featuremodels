@@ -1,4 +1,8 @@
-<svg [attr.viewBox]="viewBox()" class="tree" role="group" [attr.aria-label]="model().name + ' feature tree'">
+<svg
+  [attr.viewBox]="viewBox()"
+  class="tree"
+  [class.tree--zoomed]="pixelWidth() !== null"
+  [style.width.px]="pixelWidth()" role="group" [attr.aria-label]="model().name + ' feature tree'">
   <g class="edges">
     @for (edge of edges(); track edge.key) {
       <line class="edge" [attr.x1]="edge.x1" [attr.y1]="edge.y1" [attr.x2]="edge.x2" [attr.y2]="edge.y2"></line>

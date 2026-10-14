@@ -6,6 +6,10 @@
   overflow: visible;
 }
 
+.tree--zoomed {
+  max-width: none;
+}
+
 .edge {
   stroke: var(--border);
   stroke-width: 1.5;

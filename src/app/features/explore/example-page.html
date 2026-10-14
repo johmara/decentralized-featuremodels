@@ -33,7 +33,27 @@
           @if (listView()) {
             <app-feature-tree-list [model]="centralModel" [propagation]="prop" [disabled]="true"></app-feature-tree-list>
           } @else {
-            <app-feature-tree [model]="centralModel" [propagation]="prop" [disabled]="true"></app-feature-tree>
+            <div class="zoom-controls" role="toolbar" aria-label="Zoom">
+              <button type="button" (click)="zoomBy(1 / zoomStep, viewport)" [disabled]="zoom() !== null && zoom()! <= minZoom" aria-label="Zoom out">−</button>
+              <span class="zoom-controls__level" aria-live="polite">{{ zoom() === null ? 'Fit' : (zoom()! * 100 | number: '1.0-0') + '%' }}</span>
+              <button type="button" (click)="zoomBy(zoomStep, viewport)" [disabled]="zoom() !== null && zoom()! >= maxZoom" aria-label="Zoom in">+</button>
+              <button type="button" (click)="zoom.set(null)" [class.active]="zoom() === null">Fit</button>
+              <button type="button" (click)="zoom.set(1)" [class.active]="zoom() === 1">100%</button>
+              <span class="zoom-controls__hint">Ctrl + scroll to zoom, drag to pan</span>
+            </div>
+            <div
+              #viewport
+              class="zoom-viewport"
+              [class.zoom-viewport--pannable]="zoom() !== null"
+              [class.zoom-viewport--panning]="panning()"
+              (wheel)="onWheel($event, viewport)"
+              (pointerdown)="onPanStart($event, viewport)"
+              (pointermove)="onPanMove($event, viewport)"
+              (pointerup)="onPanEnd($event, viewport)"
+              (pointercancel)="onPanEnd($event, viewport)"
+            >
+              <app-feature-tree [model]="centralModel" [propagation]="prop" [disabled]="true" [zoom]="zoom()"></app-feature-tree>
+            </div>
           }
         }
       </section>

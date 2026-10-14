@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FeatureTree } from '../../ui/feature-tree';
 import { FeatureTreeList } from '../../ui/feature-tree-list';
@@ -15,7 +16,7 @@ import type { FeatureRef, ModelId } from '../../core/model/feature-model.types';
 
 @Component({
   selector: 'app-example-page',
-  imports: [FeatureTree, FeatureTreeList, Legend, DecentralizedView, RouterLink, TourAnchorDirective],
+  imports: [FeatureTree, FeatureTreeList, Legend, DecentralizedView, RouterLink, TourAnchorDirective, DecimalPipe],
   templateUrl: './example-page.html',
   styleUrl: './example-page.scss',
 })
@@ -31,6 +32,14 @@ export class ExamplePage {
   protected readonly shareStatus = signal<'idle' | 'copied' | 'manual'>('idle');
   protected readonly shareLink = signal<string | null>(null);
   protected readonly listView = signal(false);
+
+  /** Centralized-tree zoom. null = shrink to fit the page width. */
+  protected readonly zoom = signal<number | null>(null);
+  protected readonly panning = signal(false);
+  protected readonly zoomStep = 1.25;
+  protected readonly minZoom = 0.25;
+  protected readonly maxZoom = 4;
+  private panOrigin: { x: number; y: number; left: number; top: number } | null = null;
 
   /**
    * Runs whenever the route's exampleId changes: (re)selects the example,
@@ -90,6 +99,52 @@ export class ExamplePage {
       ...global.ruleViolations.map((violation) => explainRuleViolation(example, violation)),
     ];
   });
+
+  /**
+   * Multiplies the zoom by `factor`, keeping the point at (`anchorX`,
+   * `anchorY`) — viewport-relative pixels, the center by default — fixed on
+   * screen. Leaving "Fit" starts from the fitted scale so nothing jumps.
+   */
+  protected zoomBy(factor: number, viewport: HTMLElement, anchorX = viewport.clientWidth / 2, anchorY = viewport.clientHeight / 2): void {
+    const tree = viewport.querySelector('svg');
+    const naturalWidth = tree?.viewBox.baseVal.width ?? 0;
+    const current = this.zoom() ?? (tree && naturalWidth ? tree.getBoundingClientRect().width / naturalWidth : 1);
+    const next = Math.min(this.maxZoom, Math.max(this.minZoom, current * factor));
+    const contentX = (viewport.scrollLeft + anchorX) / current;
+    const contentY = (viewport.scrollTop + anchorY) / current;
+    this.zoom.set(next);
+    requestAnimationFrame(() => {
+      viewport.scrollLeft = contentX * next - anchorX;
+      viewport.scrollTop = contentY * next - anchorY;
+    });
+  }
+
+  protected onWheel(event: WheelEvent, viewport: HTMLElement): void {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    const rect = viewport.getBoundingClientRect();
+    this.zoomBy(event.deltaY < 0 ? this.zoomStep : 1 / this.zoomStep, viewport, event.clientX - rect.left, event.clientY - rect.top);
+  }
+
+  protected onPanStart(event: PointerEvent, viewport: HTMLElement): void {
+    if (this.zoom() === null || event.button !== 0) return;
+    this.panOrigin = { x: event.clientX, y: event.clientY, left: viewport.scrollLeft, top: viewport.scrollTop };
+    viewport.setPointerCapture(event.pointerId);
+    this.panning.set(true);
+  }
+
+  protected onPanMove(event: PointerEvent, viewport: HTMLElement): void {
+    if (!this.panOrigin) return;
+    viewport.scrollLeft = this.panOrigin.left - (event.clientX - this.panOrigin.x);
+    viewport.scrollTop = this.panOrigin.top - (event.clientY - this.panOrigin.y);
+  }
+
+  protected onPanEnd(event: PointerEvent, viewport: HTMLElement): void {
+    if (!this.panOrigin) return;
+    this.panOrigin = null;
+    if (viewport.hasPointerCapture(event.pointerId)) viewport.releasePointerCapture(event.pointerId);
+    this.panning.set(false);
+  }
 
   onToggle(ref: FeatureRef): void {
     this.store.toggle(ref);
