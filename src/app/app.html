@@ -1,6 +1,15 @@
 <a class="skip-link" href="#main-content">Skip to content</a>
 <nav class="app-nav" aria-label="Primary">
-  <a class="app-nav__brand" routerLink="/">Decentralized Feature Models</a>
+  <div class="app-nav__start">
+    <a class="ds-back-link" href="https://johan.martinson.phd" aria-label="Back to johan.martinson.phd">
+      <svg class="ds-back-link__arrow" width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      <span class="ds-back-link__mark" aria-hidden="true"></span>
+    </a>
+    <a class="app-nav__brand" routerLink="/">Decentralized Feature Models</a>
+  </div>
   <div class="app-nav__links">
     <a routerLink="/explore/phone">Explore</a>
     <a routerLink="/sandbox">Sandbox</a>
@@ -11,7 +20,7 @@
 <div id="main-content">
   <router-outlet></router-outlet>
 </div>
-<footer class="app-footer">
+<footer class="ds-footer app-footer">
   <p>&copy; 2026 Johan Martinson. All rights reserved.</p>
 </footer>
 <app-tour-overlay></app-tour-overlay>

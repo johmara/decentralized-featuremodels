@@ -7,15 +7,15 @@
     <p class="tour-card__body">{{ step.narration.body }}</p>
 
     <div class="tour-card__controls">
-      <button type="button" (click)="tourStore.prev()" [disabled]="tourStore.isFirstStep()">Back</button>
+      <button type="button" class="ds-btn ds-btn--secondary" (click)="tourStore.prev()" [disabled]="tourStore.isFirstStep()">Back</button>
 
       @if (tourStore.isLastStep()) {
-        <button type="button" class="tour-card__primary" (click)="tourStore.exit()">Finish</button>
+        <button type="button" class="ds-btn ds-btn--solid" (click)="tourStore.exit()">Finish</button>
       } @else {
-        <button type="button" class="tour-card__primary" (click)="tourStore.next()">Next</button>
+        <button type="button" class="ds-btn ds-btn--solid" (click)="tourStore.next()">Next</button>
       }
 
-      <button type="button" class="tour-card__exit" (click)="tourStore.exit()">Exit tour</button>
+      <button type="button" class="ds-btn ds-btn--link tour-card__exit" (click)="tourStore.exit()">Exit tour</button>
     </div>
   </div>
 }

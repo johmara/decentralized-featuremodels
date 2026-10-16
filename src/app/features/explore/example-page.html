@@ -11,13 +11,13 @@
   </header>
 
   <div class="example-page__mode" role="tablist" aria-label="View mode" [appTourAnchor]="'mode-toggle'">
-    <button type="button" role="tab" [attr.aria-selected]="store.mode() === 'centralized'" [class.active]="store.mode() === 'centralized'" (click)="setMode('centralized')">
+    <button type="button" role="tab" class="ds-btn ds-btn--secondary" [attr.aria-selected]="store.mode() === 'centralized'" [class.is-active]="store.mode() === 'centralized'" (click)="setMode('centralized')">
       Centralized
     </button>
-    <button type="button" role="tab" [attr.aria-selected]="store.mode() === 'decentralized'" [class.active]="store.mode() === 'decentralized'" (click)="setMode('decentralized')">
+    <button type="button" role="tab" class="ds-btn ds-btn--secondary" [attr.aria-selected]="store.mode() === 'decentralized'" [class.is-active]="store.mode() === 'decentralized'" (click)="setMode('decentralized')">
       Decentralized
     </button>
-    <button type="button" class="example-page__list-toggle" [attr.aria-pressed]="listView()" (click)="toggleListView()">
+    <button type="button" class="ds-btn ds-btn--secondary example-page__list-toggle" [attr.aria-pressed]="listView()" (click)="toggleListView()">
       {{ listView() ? 'Switch to tree view' : 'Switch to list view (screen readers)' }}
     </button>
   </div>
@@ -34,11 +34,11 @@
             <app-feature-tree-list [model]="centralModel" [propagation]="prop" [disabled]="true"></app-feature-tree-list>
           } @else {
             <div class="zoom-controls" role="toolbar" aria-label="Zoom">
-              <button type="button" (click)="zoomBy(1 / zoomStep, viewport)" [disabled]="zoom() !== null && zoom()! <= minZoom" aria-label="Zoom out">−</button>
+              <button type="button" class="ds-btn ds-btn--secondary" (click)="zoomBy(1 / zoomStep, viewport)" [disabled]="zoom() !== null && zoom()! <= minZoom" aria-label="Zoom out">−</button>
               <span class="zoom-controls__level" aria-live="polite">{{ zoom() === null ? 'Fit' : (zoom()! * 100 | number: '1.0-0') + '%' }}</span>
-              <button type="button" (click)="zoomBy(zoomStep, viewport)" [disabled]="zoom() !== null && zoom()! >= maxZoom" aria-label="Zoom in">+</button>
-              <button type="button" (click)="zoom.set(null)" [class.active]="zoom() === null">Fit</button>
-              <button type="button" (click)="zoom.set(1)" [class.active]="zoom() === 1">100%</button>
+              <button type="button" class="ds-btn ds-btn--secondary" (click)="zoomBy(zoomStep, viewport)" [disabled]="zoom() !== null && zoom()! >= maxZoom" aria-label="Zoom in">+</button>
+              <button type="button" class="ds-btn ds-btn--secondary" (click)="zoom.set(null)" [class.is-active]="zoom() === null">Fit</button>
+              <button type="button" class="ds-btn ds-btn--secondary" (click)="zoom.set(1)" [class.is-active]="zoom() === 1">100%</button>
               <span class="zoom-controls__hint">Ctrl + scroll to zoom, drag to pan</span>
             </div>
             <div
@@ -63,12 +63,12 @@
   } @else {
     <div class="example-page__presets">
       @for (preset of store.example().presets; track preset.id) {
-        <button type="button" [title]="preset.description" (click)="loadPreset(preset.id)">{{ preset.title }}</button>
+        <button type="button" class="ds-btn ds-btn--secondary" [title]="preset.description" (click)="loadPreset(preset.id)">{{ preset.title }}</button>
       }
-      <button type="button" (click)="copyLink()">
+      <button type="button" class="ds-btn ds-btn--secondary" (click)="copyLink()">
         {{ shareStatus() === 'copied' ? 'Link copied!' : 'Copy link to this state' }}
       </button>
-      <button type="button" class="example-page__reset" (click)="reset()">Reset</button>
+      <button type="button" class="ds-btn ds-btn--secondary example-page__reset" (click)="reset()">Reset</button>
     </div>
 
     @if (shareLink(); as link) {

@@ -31,6 +31,7 @@
               }
             ],
             "styles": [
+              "node_modules/@johmara/design-system/dist/design-system.css",
               "src/styles.scss"
             ]
           },

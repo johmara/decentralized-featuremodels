@@ -7,18 +7,18 @@
   </header>
 
   <div class="sandbox-page__toolbar">
-    <button type="button" (click)="sandbox.undo()" [disabled]="!sandbox.canUndo()">Undo</button>
-    <button type="button" (click)="sandbox.redo()" [disabled]="!sandbox.canRedo()">Redo</button>
-    <button type="button" (click)="onReset()">Reset</button>
-    <button type="button" (click)="downloadJson()">Export JSON</button>
-    <label class="sandbox-page__import">
+    <button type="button" class="ds-btn ds-btn--secondary" (click)="sandbox.undo()" [disabled]="!sandbox.canUndo()">Undo</button>
+    <button type="button" class="ds-btn ds-btn--secondary" (click)="sandbox.redo()" [disabled]="!sandbox.canRedo()">Redo</button>
+    <button type="button" class="ds-btn ds-btn--secondary" (click)="onReset()">Reset</button>
+    <button type="button" class="ds-btn ds-btn--secondary" (click)="downloadJson()">Export JSON</button>
+    <label class="ds-btn ds-btn--secondary sandbox-page__import">
       Import JSON
       <input type="file" accept="application/json" (change)="onImportFile($event)" />
     </label>
     <span class="sandbox-page__start">
       Start from:
       @for (id of exampleIds; track id) {
-        <button type="button" (click)="startFrom(id)">{{ exampleTitle(id) }}</button>
+        <button type="button" class="ds-btn ds-btn--secondary" (click)="startFrom(id)">{{ exampleTitle(id) }}</button>
       }
     </span>
   </div>
@@ -40,8 +40,8 @@
   <section class="sandbox-page__workspace">
     <div class="sandbox-page__workbar">
       <form class="sandbox-form sandbox-form--inline" (submit)="onAddScope($event, scopeName)">
-        <input #scopeName placeholder="New scope name, e.g. Billing Service" aria-label="New scope name" />
-        <button type="submit">+ Add scope</button>
+        <input class="ds-input ds-input--sm ds-input--inline" #scopeName placeholder="New scope name, e.g. Billing Service" aria-label="New scope name" />
+        <button type="submit" class="ds-btn ds-btn--solid">+ Add scope</button>
       </form>
       <p class="sandbox-page__hint">Click a feature to select it. Double-click (or press E) to edit it.</p>
     </div>
@@ -75,19 +75,19 @@
         <div class="inspector__row">
           <label>
             Scope name
-            <input [value]="model.name" (change)="sandbox.renameScope(model.id, $any($event.target).value)" />
+            <input class="ds-input ds-input--sm ds-input--inline" [value]="model.name" (change)="sandbox.renameScope(model.id, $any($event.target).value)" />
           </label>
-          <button type="button" class="link-button link-button--danger" (click)="onRemoveScope(model.id)">Remove scope</button>
+          <button type="button" class="ds-btn ds-btn--link ds-btn--danger" (click)="onRemoveScope(model.id)">Remove scope</button>
         </div>
     @if (selectedIn(model); as feature) {
       <div class="inspector" role="region" [attr.aria-label]="'Edit ' + feature.name">
         <div class="inspector__row">
           <label>
             Name
-            <input #nameInput [value]="feature.name" (change)="sandbox.renameFeature(model.id, feature.id, nameInput.value)" />
+            <input class="ds-input ds-input--sm ds-input--inline" #nameInput [value]="feature.name" (change)="sandbox.renameFeature(model.id, feature.id, nameInput.value)" />
           </label>
           <code class="inspector__id">{{ feature.id }}</code>
-          <button type="button" class="link-button" (click)="selected.set(null)">Close</button>
+          <button type="button" class="ds-btn ds-btn--link" (click)="selected.set(null)">Close</button>
         </div>
 
         @if (feature.parentId !== null) {
@@ -119,27 +119,27 @@
               >{{ cap.name }}</button>
             }
             <form class="inspector__new" (submit)="onNewCapability($event, model.id, feature.id, direction, newCap)">
-              <input #newCap [placeholder]="'+ new capability'" [attr.aria-label]="'New capability this feature ' + direction" />
+              <input class="ds-input ds-input--sm ds-input--inline" #newCap [placeholder]="'+ new capability'" [attr.aria-label]="'New capability this feature ' + direction" />
             </form>
           </div>
         }
 
         <form class="inspector__row" (submit)="onAddChild($event, model, feature.id, childName, childKind)">
           <span class="inspector__label">Add child</span>
-          <input #childName placeholder="Child feature name" aria-label="Child feature name" />
-          <select #childKind aria-label="Child kind">
+          <input class="ds-input ds-input--sm ds-input--inline" #childName placeholder="Child feature name" aria-label="Child feature name" />
+          <select class="ds-input ds-input--sm ds-input--inline" #childKind aria-label="Child kind">
             @for (kind of kinds; track kind.value) {
               <option [value]="kind.value" [selected]="kind.value === 'optional'">{{ kind.label }}</option>
             }
           </select>
-          <button type="submit" class="primary-button">Add</button>
+          <button type="submit" class="ds-btn ds-btn--solid">Add</button>
         </form>
 
         @if (feature.parentId !== null) {
           <div class="inspector__row">
             <button
               type="button"
-              class="link-button link-button--danger"
+              class="ds-btn ds-btn--link ds-btn--danger"
               [disabled]="feature.childIds.length > 0"
               [title]="feature.childIds.length > 0 ? 'Remove its children first' : ''"
               (click)="onRemoveFeature(model.id, feature.id, feature.parentId)"
@@ -155,13 +155,13 @@
   <section class="sandbox-page__capabilities">
     <h2>Capabilities</h2>
     <form class="sandbox-form sandbox-form--inline" (submit)="onAddCapability($event, capName, capDesc)">
-      <input #capName placeholder="Capability name" aria-label="Capability name" />
-      <input #capDesc placeholder="Description (optional)" aria-label="Capability description" />
-      <button type="submit">+ Add capability</button>
+      <input class="ds-input ds-input--sm ds-input--inline" #capName placeholder="Capability name" aria-label="Capability name" />
+      <input class="ds-input ds-input--sm ds-input--inline" #capDesc placeholder="Description (optional)" aria-label="Capability description" />
+      <button type="submit" class="ds-btn ds-btn--solid">+ Add capability</button>
     </form>
     <ul class="sandbox-page__pill-list">
       @for (cap of example().capabilities; track cap.id) {
-        <li>{{ cap.name }} <button type="button" (click)="sandbox.removeCapability(cap.id)">Remove</button></li>
+        <li>{{ cap.name }} <button type="button" class="ds-btn ds-btn--link ds-btn--danger" (click)="sandbox.removeCapability(cap.id)">Remove</button></li>
       }
     </ul>
   </section>
@@ -173,23 +173,23 @@
       requires/provides, which keep scopes independent.
     </p>
     <form class="sandbox-form sandbox-form--inline" (submit)="onAddRule($event, ruleKindSelect, ruleA, ruleB, ruleWhy)">
-      <select #ruleA aria-label="Capability">
+      <select class="ds-input ds-input--sm ds-input--inline" #ruleA aria-label="Capability">
         @for (cap of example().capabilities; track cap.id) {
           <option [value]="cap.id">{{ cap.name }}</option>
         }
       </select>
-      <select #ruleKindSelect aria-label="Rule kind" (change)="ruleKind.set($any($event.target).value)">
+      <select class="ds-input ds-input--sm ds-input--inline" #ruleKindSelect aria-label="Rule kind" (change)="ruleKind.set($any($event.target).value)">
         @for (kind of ruleKinds; track kind.value) {
           <option [value]="kind.value" [selected]="kind.value === ruleKind()">{{ kind.label }}</option>
         }
       </select>
-      <select #ruleB aria-label="Second capability" [hidden]="ruleKind() === 'capability-single-provider'">
+      <select class="ds-input ds-input--sm ds-input--inline" #ruleB aria-label="Second capability" [hidden]="ruleKind() === 'capability-single-provider'">
         @for (cap of example().capabilities; track cap.id) {
           <option [value]="cap.id">{{ cap.name }}</option>
         }
       </select>
-      <input #ruleWhy placeholder="Why? (rationale)" aria-label="Rationale" />
-      <button type="submit" [disabled]="pendingRule() !== null">Add rule…</button>
+      <input class="ds-input ds-input--sm ds-input--inline" #ruleWhy placeholder="Why? (rationale)" aria-label="Rationale" />
+      <button type="submit" class="ds-btn ds-btn--solid" [disabled]="pendingRule() !== null">Add rule…</button>
     </form>
 
     @if (pendingRule(); as rule) {
@@ -206,8 +206,8 @@
           }
         </ul>
         <div class="rule-warning__actions">
-          <button type="button" class="primary-button" (click)="confirmPendingRule()">Yes, there is no other way — add it</button>
-          <button type="button" class="link-button" (click)="pendingRule.set(null)">Cancel</button>
+          <button type="button" class="ds-btn ds-btn--solid" (click)="confirmPendingRule()">Yes, there is no other way — add it</button>
+          <button type="button" class="ds-btn ds-btn--link" (click)="pendingRule.set(null)">Cancel</button>
         </div>
       </div>
     }
@@ -216,7 +216,7 @@
       @for (rule of example().globalRules; track $index) {
         <li [title]="describeRule(rule) + ' ' + rule.rationale">
           <code>{{ ruleNotation(rule) }}</code>
-          <button type="button" (click)="sandbox.removeGlobalRule($index)">Remove</button>
+          <button type="button" class="ds-btn ds-btn--link ds-btn--danger" (click)="sandbox.removeGlobalRule($index)">Remove</button>
         </li>
       }
     </ul>

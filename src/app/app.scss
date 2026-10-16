@@ -31,7 +31,13 @@
   border-bottom: 1px solid var(--border);
 }
 
-.app-nav a {
+.app-nav__start {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.app-nav a:not(.ds-back-link) {
   text-decoration: none;
   color: var(--text);
 }
@@ -46,11 +52,7 @@
 }
 
 .app-footer {
-  padding: var(--space-4);
   border-top: 1px solid var(--border);
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  text-align: center;
 }
 
 .app-footer p {

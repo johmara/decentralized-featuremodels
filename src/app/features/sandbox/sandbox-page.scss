@@ -20,11 +20,6 @@
   flex-wrap: wrap;
 }
 
-.sandbox-page__toolbar button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 .sandbox-page__error {
   color: var(--danger);
   font-weight: 600;
@@ -68,96 +63,17 @@
   gap: var(--space-1);
 }
 
-.sandbox-page__pill-list button {
-  border: none;
-  background: none;
-  color: var(--danger);
-  cursor: pointer;
-  font-size: 0.8rem;
-  text-decoration: underline;
-}
-
 .sandbox-form--inline {
   border: none;
   padding: 0;
-}
-
-/* Form controls — same border, radius, and accent behavior as the buttons on the example pages. */
-.sandbox-page input:not([type='checkbox']):not([type='file']),
-.sandbox-page select {
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-raised);
-  color: var(--text);
-  font: inherit;
-  font-size: 0.875rem;
-  padding: var(--space-2) var(--space-3);
-  min-width: 0;
-  transition: border-color var(--transition-fast);
-}
-
-.sandbox-page input::placeholder {
-  color: var(--text-muted);
-}
-
-.sandbox-page input:not([type='checkbox']):hover,
-.sandbox-page select:hover {
-  border-color: var(--text-muted);
-}
-
-.sandbox-page input:not([type='checkbox']):focus-visible,
-.sandbox-page select:focus-visible {
-  border-color: var(--accent);
-  outline-offset: 0;
 }
 
 .sandbox-page input[type='checkbox'] {
   accent-color: var(--accent);
 }
 
-.sandbox-page__toolbar button,
-.sandbox-page__import,
-.sandbox-form button,
-.primary-button {
-  border: 1.5px solid var(--border);
-  background: var(--surface-raised);
-  color: var(--text);
-  border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-3);
-  font: inherit;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: border-color var(--transition-fast), color var(--transition-fast);
-}
-
-.sandbox-page__toolbar button:hover:not(:disabled),
-.sandbox-page__import:hover,
-.sandbox-form button:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
 .sandbox-page__import input {
   display: none;
-}
-
-/* The one action per form that commits something. */
-.sandbox-form button[type='submit'],
-.primary-button {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--surface);
-  font-weight: 600;
-}
-
-.sandbox-form button[type='submit']:hover:not(:disabled) {
-  color: var(--surface);
-  filter: brightness(1.1);
-}
-
-.sandbox-form button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .sandbox-page__start {
@@ -262,25 +178,6 @@
   font-weight: 600;
 }
 
-.link-button {
-  border: none;
-  background: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 0.8rem;
-  text-decoration: underline;
-  margin-left: auto;
-}
-
-.link-button--danger {
-  color: var(--danger);
-}
-
-.link-button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 .rule-warning {
   border: 1.5px solid var(--danger);
   border-radius: var(--radius-md);
@@ -298,4 +195,19 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
+}
+
+/* Density tweaks for the design system controls inside this page. */
+.sandbox-page .ds-btn--solid {
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.875rem;
+}
+
+.sandbox-page__pill-list .ds-btn,
+.inspector__row .ds-btn--link {
+  font-size: 0.8rem;
+}
+
+.inspector__row .ds-btn--link {
+  margin-left: auto;
 }

@@ -9,46 +9,40 @@
   --team-keyboard: #f38653;
   --team-storage: #5c6784;
 
-  --surface: #ffffff;
-  --surface-muted: #f3f4f6;
-  --surface-raised: #ffffff;
-  --border: #d6d7db;
-  --text: #1b1f27;
-  --text-muted: #5c6472;
-  --accent: #1c4f8f;
-  --danger: #b3261e;
+  /* App tokens mapped onto @johmara/design-system. The design system switches theme on
+     :root[data-theme='dark'], the same attribute this app already sets. */
+  --surface: var(--ds-color-bg);
+  --surface-muted: var(--ds-color-bg-subtle);
+  --surface-raised: var(--ds-color-bg);
+  --border: var(--ds-color-border);
+  --text: var(--ds-color-text);
+  --text-muted: var(--ds-color-text-muted);
+  --accent: var(--ds-color-primary);
+  --danger: var(--ds-color-danger);
+  /* The design system's success is a bright accent; text needs a darker green. */
   --success: #1c7a4d;
-  --focus-ring: #1c4f8f;
+  --focus-ring: var(--ds-color-primary);
 
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: var(--ds-font-sans);
   --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
 
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
+  --space-1: var(--ds-space-1);
+  --space-2: var(--ds-space-2);
+  --space-3: var(--ds-space-3);
+  --space-4: var(--ds-space-4);
+  --space-6: var(--ds-space-5);
+  --space-8: var(--ds-space-6);
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 14px;
+  --radius-sm: var(--ds-radius-sm);
+  --radius-md: var(--ds-radius-md);
+  --radius-lg: var(--ds-radius-lg);
 
   --transition-fast: 120ms ease;
   --transition-medium: 220ms ease;
 }
 
 :root[data-theme='dark'] {
-  --surface: #12141a;
-  --surface-muted: #1b1f27;
-  --surface-raised: #1f2430;
-  --border: #333a47;
-  --text: #eef0f4;
-  --text-muted: #a3aab8;
-  --accent: #7fb1f5;
-  --danger: #ff8b82;
   --success: #6fd6a3;
-  --focus-ring: #7fb1f5;
 }
 
 .reduced-motion,

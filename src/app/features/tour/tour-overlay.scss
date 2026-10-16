@@ -38,32 +38,11 @@
   gap: var(--space-2);
 }
 
-.tour-card__controls button {
-  border: 1.5px solid var(--border);
-  background: var(--surface-muted);
-  color: var(--text);
-  border-radius: var(--radius-md);
+.tour-card__controls .ds-btn {
   padding: var(--space-1) var(--space-3);
   font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.tour-card__controls button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.tour-card__primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--surface);
-  font-weight: 600;
 }
 
 .tour-card__exit {
   margin-left: auto;
-  background: transparent;
-  border-color: transparent;
-  color: var(--text-muted);
-  text-decoration: underline;
 }
